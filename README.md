@@ -1,5 +1,3 @@
-# parens-8
-
 ![(parens-8)](parens-8.png)
 
 a tiny lisp for your pico-8 carts
