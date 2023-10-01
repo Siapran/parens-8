@@ -10,12 +10,12 @@ function builtin:let(env, ev)
 end
 
 -- (while (< x 3) (set x (+ 1 x))
-make_builtin("while", function (ev, exp)
+def_builtin("while", function (ev, exp)
 	while (ev(2)) ev(3)
 end)
 
 -- (for ((k v) (pairs foo)) (body))
-make_builtin("for", function (ev, exp, env)
+def_builtin("for", function (ev, exp, env)
 	local _f, _s, _var = eval(exp[2][2], env)
 	repeat
 		local vars = {_f(_s, _var)}
