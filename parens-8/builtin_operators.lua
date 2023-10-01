@@ -1,6 +1,4 @@
-function make_builtin(name, fn)
-	builtin[name] = function(exp, env, ev) return fn(ev, exp, env) end
-end
+-- requires make_builtin.lua
 
 make_builtin("neg", function(ev) return -ev(2) end)
 make_builtin("+", function(ev) return ev(2)+ev(3) end)
