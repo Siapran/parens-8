@@ -1,11 +1,12 @@
 -- parens-8
 -- a lisp interpreter by twomice
 
-function any(matches)
+function any(matches, inv)
 	return function(val)
 		for match in all(matches) do
-			if (val == match) return true
+			if (val == match) return not inv
 		end
+		return inv
 	end
 end
 
@@ -27,9 +28,7 @@ end
 function parse(str)
 	local res = {}
 	while #str > 0 do
-		local strip, c = find(str, function(x)
-				return not any' \n\t'(x)
-			end)
+		local strip, c = find(str, any(' \n\t', true))
 		str = sub(str, strip)
 		if c == '(' then
 			local list, rest = parse(sub(str, 2))
@@ -51,34 +50,38 @@ function parse(str)
 	return res, str
 end
 
-function eval(exp, env)
+local builtin = {}
+
+local function eval(exp, env)
 	local function ev(i) return eval(exp[i], env) end
 	if (type(exp) == "string") return env[exp]
 	if (type(exp) == "number") return exp
-	local n, op, ex2, ex3, ex4 = #exp, unpack(exp)
-	if (op == "quote") return ex2
-	if op == "if" then
-		if (ev(2)) return ev(3)
-		if (ex4) return ev(4)
-	elseif op == "fn" then
-		return function(...)
-			return eval(ex3, setmetatable(
-				zip(ex2, {...}),
-				{__index = env, __newindex = env}))
-		end
-	elseif op == "def" then
-		env[ex2] = ev(3)
-	else
-		local function apply(i)
-			if (i < n) return ev(i), apply(i + 1)
-			if (i == n) return ev(i)
-		end
-		return ev(1)(apply(2))
+	local n = #exp
+	local op = builtin[exp[1]]
+	if (op) return op(exp, env, ev)
+	local function apply(i)
+		if (i < n) return ev(i), apply(i + 1)
+		if (i == n) return ev(i)
+	end
+	return ev(1)(apply(2))
+end
+
+function builtin:quote(env, ev) return self[2] end
+function builtin:def(env, ev) env[self[2]] = ev(3) end
+function builtin:when(env, ev)
+	if (ev(2)) return ev(3)
+	if (self[4]) return ev(4)
+end
+function builtin:fn(env)
+	return function(...)
+		return eval(self[3], setmetatable(
+			zip(self[2], {...}),
+			{__index = env, __newindex = env}))
 	end
 end
 
-function identity(...) return ... end
+function id(...) return ... end
 
 function parens8(code)
-	return eval(parse("identity "..code), _ENV)
+	return eval(parse("id "..code), _ENV)
 end
