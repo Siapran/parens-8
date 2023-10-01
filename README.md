@@ -28,7 +28,7 @@ note that `"foo"` is turned into `(quote foo)` by the parser. you can also creat
 
 ## parens-8 extensions
 
-while designed as a lightweight runtime for offloading code to strings and ROM, parens-8 has extensions to turn it into a fully featured programming language.
+while designed as a lightweight (404 tokens!) runtime for offloading code to strings and ROM, parens-8 has extensions to turn it into a fully featured programming language.
 
 ```lisp
 (set fib
