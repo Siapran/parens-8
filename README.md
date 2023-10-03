@@ -69,6 +69,34 @@ you may also define you own builtins using the `def_builtin` function found in `
 
 this opens up interesting avenues for metaprogramming. in fact, all the builtins in `builtin/flow.lua` could be implemented in pure parens-8 (yes, even `while`, using tail recursion).
 
+## limitations
+
+parens-8 has a few limitations that will stay, in the interest of token economy.
+
+function parameters with `nil` values become "invisible", that is:
+```lua
+x = "oops"
+parens8[[
+((fn (x)
+     (id (print x)
+         (set x (quote))
+         (print x)))
+ 42)
+]] -- prints "42", then "oops"
+```
+a similar limitation also exists when using the `env` builtin extension:
+```lua
+x = "oops"
+tabl = {x = 42}
+parens8[[
+(env tabl
+     (id (print x)
+         (set x (quote))
+         (print x)))
+]] -- prints "42", then "oops"
+```
+same with `let`, `for`, etc.
+
 ## performance
 
 well, it's far from being [picoscript](https://carlc27843.github.io/post/picoscript/), I'll tell you that much. a parens-8 implementation of the identity function `(fn (x) x)` is about six times slower than native lua, and it only gets worse with scale. every access to a symbol is liable to go through a pretty long chain of `__index` metamethods for scope resolution, and that bogs down performance pretty dramatically.
