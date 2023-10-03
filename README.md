@@ -73,7 +73,7 @@ this opens up interesting avenues for metaprogramming. in fact, all the builtins
 
 parens-8 has a few limitations that will stay, in the interest of token economy.
 
-function parameters with `nil` values become "invisible", that is:
+variables with `nil` values become "invisible", that is:
 ```lua
 x = "oops"
 parens8[[
@@ -84,18 +84,7 @@ parens8[[
  42)
 ]] -- prints "42", then "oops"
 ```
-a similar limitation also exists when using the `env` builtin extension:
-```lua
-x = "oops"
-tabl = {x = 42}
-parens8[[
-(env tabl
-     (id (print x)
-         (set x (quote))
-         (print x)))
-]] -- prints "42", then "oops"
-```
-same with `let`, `for`, etc.
+this also applies when using the `env`, `let` and `for` builtin extensions.
 
 ## performance
 
