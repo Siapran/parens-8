@@ -4,7 +4,7 @@ a tiny lisp for your pico-8 carts
 
 ## overview
 
-parens-8 is designed for maximum compatibility with lua. lua functions and values can be called and passed from parens-8, and vice-versa. the `parens8` function evaluates a string as a parens-8 expression:
+parens-8 is designed for maximum interoperability with lua. lua functions and values can be called and passed from parens-8, and vice-versa. the `parens8` function evaluates parens-8 expressions passed as strings:
 
 ```lua
 a, b, c = parens8[[1 2 3]]
@@ -17,7 +17,7 @@ parens8[[
 ]](42) -- 42
 ```
 
-parens-8 has the exact same multiple return values semantics as lua, though it lacks the syntax for variadics. leverage `id`, `select`, `pack` and `unpack` to your advantage.
+parens-8 has the same multiple return values behavior as lua, though it lacks the syntax for variadics. leverage `id`, `select`, `pack` and `unpack` to your advantage.
 
 parens-8 comes with four base builtins:
 * `(set a b)`, for assignment, aka `a = b`
@@ -27,9 +27,17 @@ parens-8 comes with four base builtins:
 
 note that `"foo"` is translated into `(quote foo)` by the parser. you can also create lua arrays this way: `(quote (1 2 3))`
 
+## interpreter vs compiler
+
+parens-8 comes in two flavors:
+* the interpreter: 402 tokens, found in `interpreter/parens8.lua`
+* the compiler: 440 tokens, found in `compiler/parens8.lua`
+
+both flavors support the same features, and while heavier in tokens and memory usage, compiled parens-8 is over twice as fast as interpreted parens-8. extensions also take a few more tokens each for compiled parens-8, speaking of which...
+
 ## parens-8 extensions
 
-while designed as a lightweight (404 tokens!) runtime for offloading code to strings and ROM, parens-8 has extensions to turn it into a fully featured programming language.
+while designed as a lightweight runtime for offloading code to strings and ROM, parens-8 has extensions to turn it into a fully featured programming language.
 
 ```lisp
 (set fib
@@ -53,25 +61,15 @@ while designed as a lightweight (404 tokens!) runtime for offloading code to str
 (print ([] mytable "b"))
 ```
 
-extensions can be found in `parens-8/builtin/`. include the extensions you need, and feel free to comment out builtins you aren't using.
+extensions can be found in `flavor/builtin/`. include the extensions you need, and feel free to comment out builtins you aren't using.
 
-you may also define you own builtins using the `def_builtin` function found in `builtin/def_builtin.lua`. builtins can even be defined from within parens-8!
-```lisp
-(def_builtin "if"
-  (fn (ev exp)
-      (when (ev 2)
-        (ev 3)
-        (when ([] exp 4)
-          (ev 4)))))
-
-(if 1 (print "A") (print "B"))
-```
-
-this opens up interesting avenues for metaprogramming. in fact, all the builtins in `builtin/flow.lua` could be implemented in pure parens-8 (yes, even `while`, using tail recursion).
+custom builtins may be defined from both lua and parens-8. compiled builtins are written slightly differently than interpreted builtins:
+* interpreted builtins are best defined through `def_builtin`, found in `interpreter/builtin/def_builtin.lua`
+* compiled builtins are a bit trickier. study the files `compiler/parens8.lua` and `compiler/builtin/operators.lua`
 
 ## limitations
 
-parens-8 has a few limitations that will stay, in the interest of token economy.
+parens-8 has a few limitations that are here to stay, in the interest of token economy.
 
 variables with `nil` values become "invisible", that is:
 ```lua
@@ -88,9 +86,16 @@ this also applies when using the `env`, `let` and `for` builtin extensions.
 
 ## performance
 
-well, it's far from being [picoscript](https://carlc27843.github.io/post/picoscript/), I'll tell you that much. a parens-8 implementation of the identity function `(fn (x) x)` is about six times slower than native lua, and it only gets worse with scale. every access to a symbol is liable to go through a pretty long chain of `__index` metamethods for scope resolution, and that bogs down performance pretty dramatically.
+well, it's no [picoscript](https://carlc27843.github.io/post/picoscript/), but compiled parens-8 isn't too far off. benchmarking parens-8 against native lua and the hand-expanded picoscript closure from the blog post gives the following results:
 
-parens-8 is first and foremost designed for "glue" code, bits and pieces of logic you'd rather pay for in overhead instead of tokens. what parens-8 doesn't have in performance, it makes up for in flexibility and accessibility.
+| language | time / native | native / time |
+| --- | --- | --- |
+| native lua | 1 | 100% |
+| picoscript | 1.3088 | 76.4023% |
+| parens-8 interpreter | 8.4138 | 11.8851% |
+| parens-8 compiler | 4.1508 | 24.0906% |
+
+parens-8 is first and foremost designed for "glue" code: bits and pieces of logic you'd rather pay for in overhead instead of tokens. what parens-8 doesn't have in performance, it makes up for in flexibility and accessibility.
 
 ## ROM utilities
 
@@ -103,11 +108,22 @@ if (when) you run out of chars in your cart's code, you can store more code in t
 
 ## misc
 
-there's a, uh, parens-8 syntax highlighter? I guess? it colors literals and matching parenthesis pairs.
+parens-8, like lua, supports tail call elimination. this can be leveraged if you plan on foregoing flow extensions:
+```lisp
+(set loop
+     (fn (i)
+         (loop (+ i 1)
+               (print (.. (stat 0)
+                          (.. " " i))))))
+(loop 1)
+```
+
+there's a, uh, parens-8 syntax highlighter? I guess? it colors literals and matching parenthesis pairs, using p8scii control codes.
 
 ## acknowledgements
 
 * Peter Norvig's [excellent tutorial](https://norvig.com/lispy.html) on how to implement your own lisp.
+* [luchak](https://github.com/luchak) helped quite a bit with the compiler, and I borrowed a few tricks from his own pico-8 lisp implementations.
+* [carlc27843](https://carlc27843.github.io/), for the tantalizing [blog post](https://carlc27843.github.io/post/picoscript/) that inspired me to implement my own extension language.
 * [Wuff](https://wuffmakesgames.itch.io/), for integrating parens-8 into PicOS, and putting up with my shenanigans.
-* [luchak](https://github.com/luchak), for showing me his own pico-8 lisp interpreter (I stole a couple bits).
-* the pico-8 discord server, for all the help and resources a developer could ask for.
+* the pico-8 discord server, for all the help, inspiration and resources a developer could ask for.
