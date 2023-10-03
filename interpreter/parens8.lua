@@ -66,7 +66,7 @@ local function eval(exp, env)
 	return ev(1)(apply(2))
 end
 
-function builtin:quote(env, ev) return self[2] end
+function builtin:quote() return self[2] end
 function builtin:set(env, ev) env[self[2]] = ev(3) end
 function builtin:when(env, ev)
 	if (ev(2)) return ev(3)
