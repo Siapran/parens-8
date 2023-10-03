@@ -50,16 +50,15 @@ function parse(str)
 	return res, str
 end
 
-local builtin = {}
+builtin = {}
 
 local function eval(exp)
-	local function ev(i) return eval(exp[i]) end
 	if (type(exp) == "string") return function(env) return env[exp] end
 	if (type(exp) == "number") return function() return exp end
 	local n = #exp
 	local op = builtin[exp[1]]
 	local compiled = {}
-	for i=1,n do compiled[i] = ev(i) end
+	for i=1,n do compiled[i] = eval(exp[i]) end
 	if (op) return op(exp, unpack(compiled, 2))
 
 	return function(env)
@@ -78,7 +77,7 @@ end
 function builtin:when(a1, a2, a3)
 	return function(env)
 		if (a1(env)) return a2(env)
-		if (self[4]) return a3(env)
+		if (a3) return a3(env)
 	end
 end
 function builtin:fn(_, a2)
