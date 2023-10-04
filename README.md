@@ -67,6 +67,37 @@ custom builtins may be defined from both lua and parens-8. compiled builtins are
 
 while builtin definitions and the code that uses them can be in the same `parens8` interpreter call, the same cannot be said of the compiler. if you're defining a builtin from within compiled parens-8, it won't be available until the next `parens8` invocation.
 
+## performance
+
+well, it's no [picoscript](https://carlc27843.github.io/post/picoscript/), but compiled parens-8 isn't too far off. benchmarking parens-8 against native lua and the hand-expanded picoscript closure from the blog post gives the following results:
+
+creating the `glstate` function:
+| language | time / native | native / time |
+| --- | --- | --- |
+| native lua | 1 | 100% |
+| picoscript | 1.3088 | 76.4023% |
+| parens-8 interpreter | 8.4138 | 11.8851% |
+| parens-8 compiler | 4.1508 | 24.0906% |
+
+calling the `glstate` function:
+| language | time / native | native / time |
+| --- | --- | --- |
+| native lua | 1 | 100% |
+| picoscript | 5.2007 | 19.2276% |
+| parens-8 interpreter | 18.2374 | 5.4825% |
+| parens-8 compiler | 9.0315 | 11.0718% |
+
+parens-8 is first and foremost designed for "glue" code: bits and pieces of logic you'd rather pay for in overhead instead of tokens. what parens-8 doesn't have in performance, it makes up for in flexibility and accessibility.
+
+## ROM utilities
+
+if (when) you run out of chars in your cart's code, you can store more code in the ROM of other carts. this is easily done via the utilities found in `parens-8/romutils/`:
+* `small = minify(code)` removes as much whitespace from your parens-8 code as possible
+* `length = writerom(small, address, filename)` `cstore`s your string in the data of `filename`
+* `loaded = parens8(readrom(address, length, filename))` reads and parses your code back at you.
+
+`readrom` is implemented in pure parens-8, without any extensions! it's the perfect example of glue code.
+
 ## limitations
 
 parens-8 has a few limitations that are here to stay, in the interest of token economy.
@@ -86,27 +117,15 @@ this also applies when using the `env`, `let` and `for` builtin extensions.
 
 while parens-8 supports same multiple return values behavior as lua, it lacks the `...` syntax for variadics. the `id`, `select`, `pack` and `unpack` functions shouled be leveraged when handling parameter packs.
 
-## performance
+`'` and `"` can't be escaped in parens-8 strings, but you can use either as quotes:
+```lisp
+(print "hello, here's a single quote")
+(print 'sure... a single "quote", I think we call this an apostrophe')
+(print "don't make fun of me, you can't even say 'can't'")
+(print "you guys know the `..` operator exists, right?")
+```
 
-well, it's no [picoscript](https://carlc27843.github.io/post/picoscript/), but compiled parens-8 isn't too far off. benchmarking parens-8 against native lua and the hand-expanded picoscript closure from the blog post gives the following results:
-
-| language | time / native | native / time |
-| --- | --- | --- |
-| native lua | 1 | 100% |
-| picoscript | 1.3088 | 76.4023% |
-| parens-8 interpreter | 8.4138 | 11.8851% |
-| parens-8 compiler | 4.1508 | 24.0906% |
-
-parens-8 is first and foremost designed for "glue" code: bits and pieces of logic you'd rather pay for in overhead instead of tokens. what parens-8 doesn't have in performance, it makes up for in flexibility and accessibility.
-
-## ROM utilities
-
-if (when) you run out of chars in your cart's code, you can store more code in the ROM of other carts. this is easily done via the utilities found in `parens-8/romutils/`:
-* `small = minify(code)` removes as much whitespace from your parens-8 code as possible
-* `length = writerom(small, address, filename)` `cstore`s your string in the data of `filename`
-* `loaded = parens8(readrom(address, length, filename))` reads and parses your code back at you.
-
-`readrom` is implemented in pure parens-8, without any extensions! it's the perfect example of glue code.
+troubleshooting errors is somewhat challenging, as the language itself makes no attempt at diagnostics. debugging parens-8 is slightly easier, as you can at least tell if something is a syntax error or a runtime error.
 
 ## misc
 
