@@ -65,6 +65,8 @@ custom builtins may be defined from both lua and parens-8. compiled builtins are
 * interpreted builtins are best defined through `def_builtin`, found in `interpreter/builtin/def_builtin.lua`
 * compiled builtins are a bit trickier. study the files `compiler/parens8.lua` and `compiler/builtin/operators.lua`
 
+while builtin definitions and the code that uses them can be in the same `parens8` interpreter call, the same cannot be said of the compiler. if you're defining a builtin from within compiled parens-8, it won't be available until the next `parens8` invocation.
+
 ## limitations
 
 parens-8 has a few limitations that are here to stay, in the interest of token economy.
@@ -108,8 +110,11 @@ if (when) you run out of chars in your cart's code, you can store more code in t
 
 ## misc
 
-most lisp flavors have some sort of `progn` builtin for executing sequences of statements, which is equivalent to `(select -1 exp1 exp2 expn)`. in parens-8, the choice was made to use the identity function `function id(...) return ... end` instead. `id` can be used wherever you need to run multiple statements in a single expressions, and can also be used whenever you need to return multiple values from a function:
+most lisp flavors have some sort of `progn` builtin for executing sequences of statements, which is equivalent to `(select -1 exp1 exp2 expn)`. in parens-8, the choice was made to use the identity function `function id(...) return ... end` instead. `id` can be used wherever you need to run multiple statements in a single expression, and can also be used whenever you need to return multiple values from a function:
 ```lisp
+(set print_foo_then_print_bar
+     (fn () (id (print foo)
+                (print bar))))
 (set swap (fn (a b) (id b a)))
 ```
 
@@ -122,6 +127,8 @@ parens-8, like lua, supports tail call elimination. this can be leveraged if you
                           (.. " " i))))))
 (loop 1)
 ```
+
+the "compiler" separates the AST traversal from evaluation by returning a chain of closures with the pre-compiled AST held in upvalues. this does make each `parens8` call slower, but functions defined within that call are much faster.
 
 there's a, uh, parens-8 syntax highlighter? I guess? it colors literals and matching parenthesis pairs, using p8scii control codes.
 
