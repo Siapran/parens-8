@@ -4,7 +4,7 @@ a tiny lisp for your pico-8 carts
 
 ## overview
 
-parens-8 is designed for maximum interoperability with lua. lua functions and values can be called and passed from parens-8, and vice-versa. the `parens8` function evaluates parens-8 expressions passed as strings:
+parens-8 is designed for maximum interoperability with lua. function, tables and values can be passed and used seamlessly between lua and parens-8. the `parens8` function evaluates parens-8 expressions passed as strings:
 
 ```lua
 a, b, c = parens8[[1 2 3]]
@@ -16,8 +16,6 @@ parens8[[
 (fn (x) (print x))
 ]](42) -- 42
 ```
-
-parens-8 has the same multiple return values behavior as lua, though it lacks the syntax for variadics. leverage `id`, `select`, `pack` and `unpack` to your advantage.
 
 parens-8 comes with four base builtins:
 * `(set a b)`, for assignment, aka `a = b`
@@ -35,7 +33,7 @@ parens-8 comes in two flavors:
 
 both flavors support the same features, and while heavier in tokens and memory usage, compiled parens-8 is over twice as fast as interpreted parens-8. extensions also take a few more tokens each for compiled parens-8, speaking of which...
 
-## parens-8 extensions
+## builtin extensions
 
 while designed as a lightweight runtime for offloading code to strings and ROM, parens-8 has extensions to turn it into a fully featured programming language.
 
@@ -84,6 +82,8 @@ parens8[[
 ```
 this also applies when using the `env`, `let` and `for` builtin extensions.
 
+while parens-8 supports same multiple return values behavior as lua, it lacks the `...` syntax for variadics. the `id`, `select`, `pack` and `unpack` functions shouled be leveraged when handling parameter packs.
+
 ## performance
 
 well, it's no [picoscript](https://carlc27843.github.io/post/picoscript/), but compiled parens-8 isn't too far off. benchmarking parens-8 against native lua and the hand-expanded picoscript closure from the blog post gives the following results:
@@ -107,6 +107,11 @@ if (when) you run out of chars in your cart's code, you can store more code in t
 `readrom` is implemented in pure parens-8, without any extensions! it's the perfect example of glue code.
 
 ## misc
+
+most lisp flavors have some sort of `progn` builtin for executing sequences of statements, which is equivalent to `(select -1 exp1 exp2 expn)`. in parens-8, the choice was made to use the identity function `function id(...) return ... end` instead. `id` can be used wherever you need to run multiple statements in a single expressions, and can also be used whenever you need to return multiple values from a function:
+```lisp
+(set swap (fn (a b) (id b a)))
+```
 
 parens-8, like lua, supports tail call elimination. this can be leveraged if you plan on foregoing flow extensions:
 ```lisp
