@@ -69,17 +69,7 @@ while builtin definitions and the code that uses them can be in the same `parens
 
 ## performance
 
-well, it's no [picoscript](https://carlc27843.github.io/post/picoscript/), but compiled parens-8 isn't too far off. benchmarking parens-8 against native lua and the hand-expanded picoscript closure from the blog post gives the following results:
-
-creating the `glstate` function:
-| language | time / native | native / time |
-| --- | --- | --- |
-| native lua | 1 | 100% |
-| picoscript | 1.3088 | 76.4023% |
-| parens-8 interpreter | 8.4138 | 11.8851% |
-| parens-8 compiler | 4.1508 | 24.0906% |
-
-calling the `glstate` function:
+well, it's no [picoscript](https://carlc27843.github.io/post/picoscript/), but compiled parens-8 isn't too far off. benchmarking parens-8 against native lua and the hand-expanded picoscript closure from the blog post gives the following results when calling the `glstate` function:
 | language | time / native | native / time |
 | --- | --- | --- |
 | native lua | 1 | 100% |
