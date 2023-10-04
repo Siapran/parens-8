@@ -6,9 +6,10 @@ function builtin:let(_, a2)
 		bound[binding[1]] = eval(binding[2])
 	end
 	return function(env)
-		for k,v in pairs(bound) do bound[k] = v(env) end
+		local runbound = {}
+		for k,v in pairs(bound) do runbound[k] = v(env) end
 		return a2(setmetatable(
-			bound, {__index = env, __newindex = env}))
+			runbound, {__index = env, __newindex = env}))
 	end
 end
 
