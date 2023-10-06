@@ -5,6 +5,9 @@ function builtin:env(a1, a2)
 			{}, {__index = function(_, key)
 				if (tab[key] ~= nil) return tab[key]
 				return env[key]
-			end, __newindex = tab}))
+			end, __newindex = function(_, key, val)
+				if tab[key] ~= nil then tab[key] = val
+				else env[key] = val end
+			end}))
 	end
 end

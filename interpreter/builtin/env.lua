@@ -4,5 +4,8 @@ function builtin:env(outer, ev)
 		{}, {__index = function(ev, key)
 			if (tab[key] ~= nil) return tab[key]
 			return outer[key]
-		end, __newindex = tab}))
+		end, __newindex = function(_, key, val)
+			if tab[key] ~= nil then tab[key] = val
+			else env[key] = val end
+		end}))
 end
