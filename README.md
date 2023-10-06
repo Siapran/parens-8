@@ -25,6 +25,8 @@ parens-8 comes with four base builtins:
 
 note that `"foo"` is translated into `(quote foo)` by the parser. you can also create lua arrays this way: `(quote (1 2 3))`
 
+could you make an entire game with it? [yes](./examples/baloonbomber.p8), though you probably shouldn't.
+
 ## interpreter vs compiler
 
 parens-8 comes in two flavors:
@@ -90,7 +92,7 @@ if (when) you run out of chars in your cart's code, you can store more code in t
 
 ## limitations
 
-parens-8 has a few limitations that are here to stay, in the interest of token economy.
+parens-8 has a few limitations that are probably here to stay, in the interest of token economy.
 
 variables with `nil` values become "invisible", that is:
 ```lua
@@ -105,7 +107,7 @@ parens8[[
 ```
 this also applies when using the `env`, `let` and `for` builtin extensions.
 
-while parens-8 supports same multiple return values behavior as lua, it lacks the `...` syntax for variadics. the `id`, `select`, `pack` and `unpack` functions shouled be leveraged when handling parameter packs.
+while parens-8 supports same multiple return values behavior as lua, it lacks the `...` syntax for variadics. the `id`, `select`, `pack` and `unpack` functions should be leveraged when handling parameter packs.
 
 `'` and `"` can't be escaped in parens-8 strings, but you can use either as quotes:
 ```lisp
