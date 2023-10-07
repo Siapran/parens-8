@@ -83,7 +83,7 @@ parens-8 is first and foremost designed for "glue" code: bits and pieces of logi
 
 ## ROM utilities
 
-if (when) you run out of chars in your cart's code, you can store more code in the ROM of other carts. this is easily done via the utilities found in `parens-8/romutils/`:
+if (when) you run out of chars in your cart's code, you can store more code in the ROM of other carts. this is easily done via the utilities found in `parens-8/rom-utils/`:
 * `small = minify(code)` removes as much whitespace from your parens-8 code as possible
 * `length = writerom(small, address, filename)` `cstore`s your string in the data of `filename`
 * `loaded = parens8(readrom(address, length, filename))` reads and parses your code back at you.
