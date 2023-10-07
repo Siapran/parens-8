@@ -20,7 +20,7 @@ parens8[[
 		(when (< ttl 0) (del particles particle))
 		(when (or (~= x (mid x -8 135))
 		          (~= y (mid y -8 135)))
-		    (del particles particle))))))))
+			(del particles particle))))))))
 
 (set draw_particles (fn () (id
 	(set particles_fg (pack))
@@ -34,50 +34,50 @@ parens8[[
 		(([] particle "draw") particle))))
 
 (set make_smoke (fn (x y) (add particles (zip
-    (split "x,y,r,ttl,update,draw") (pack
-        x y 2 0x7fff
-        (fn (self) (env self (id
-            (set x (- (+ x (- (rnd 2) 1)) speed))
-            (set y (- (+ y (- (rnd 2) 1)) .5))
-            (set r (+ r .25)))))
-        (fn (self) (env self (circfill x y r 0))))))))
+	(split "x,y,r,ttl,update,draw") (pack
+		x y 2 0x7fff
+		(fn (self) (env self (id
+		    (set x (- (+ x (- (rnd 2) 1)) speed))
+		    (set y (- (+ y (- (rnd 2) 1)) .5))
+		    (set r (+ r .25)))))
+		(fn (self) (env self (circfill x y r 0))))))))
 
 (set explosion_colors (pack 0 7 10 9 2 1))
 (set make_explosion (fn (x y r) (add particles (zip
-    (split "x,y,r,ttl,fg,update,draw") (pack
-        x y r 10 1
-        (fn (self) (env self (when (< ttl 5) (id
-			(set x (- x speed))
-			(make_smoke (- (+ x (rnd r)) (/ r 2))
-			            (- (+ y (rnd r)) (/ r 2)))))))
-        (fn (self) (env self
-        	(circfill
-        		x y
-        		(* r (min (/ ttl 8) 1))
-        		(or ([] explosion_colors (- 11 ttl)) 0)))))))))
+	(split "x,y,r,ttl,fg,update,draw") (pack
+		x y r 10 1
+		(fn (self) (env self (when (< ttl 5) (id
+		    (set x (- x speed))
+		    (make_smoke (- (+ x (rnd r)) (/ r 2))
+		                (- (+ y (rnd r)) (/ r 2)))))))
+		(fn (self) (env self
+		    (circfill
+		        x y
+		        (* r (min (/ ttl 8) 1))
+		        (or ([] explosion_colors (- 11 ttl)) 0)))))))))
 
 (set make_pop (fn (x y) (add particles (zip
-    (split "x,y,ttl,fg,update,draw") (pack
+	(split "x,y,ttl,fg,update,draw") (pack
 		x y 3 1
 		(fn () (id))
 		(fn (self) (env self (spr 10 x y))))))))
 
 (set make_spark_cluster (fn (x y amount spread) (add particles (zip
-    (split "x,y,ttl,fg,sparks,update,draw") (pack
-        x y 15 1
-        (let ((res (pack))) (select -1
-            (while (> amount 0) (id
-                (set amount (- amount 1))
-                (add res (zip (split "x,y,vx,vy") (pack
-                    x y (- (rnd (* 2 spread)) spread) (* -2 (rnd spread)))))))
-            res))
-        (fn (self) (foreach ([] self "sparks") (fn (spark) (env spark (id
-            (set vy (* .95 (+ vy gravity)))
-            (set vx (* .95 vx))
-            (set x (+ vx (- x (* speed (min (/ 8 ([] self "ttl")) 1)))))
-            (set y (+ vy y)))))))
-        (fn (self) (foreach ([] self "sparks") (fn (spark)
-            (pset ([] spark "x") ([] spark "y") 10)))))))))
+	(split "x,y,ttl,fg,sparks,update,draw") (pack
+		x y 15 1
+		(let ((res (pack))) (select -1
+			(while (> amount 0) (id
+			    (set amount (- amount 1))
+			    (add res (zip (split "x,y,vx,vy") (pack
+			        x y (- (rnd (* 2 spread)) spread) (* -2 (rnd spread)))))))
+			res))
+		(fn (self) (foreach ([] self "sparks") (fn (spark) (env spark (id
+		    (set vy (* .95 (+ vy gravity)))
+		    (set vx (* .95 vx))
+		    (set x (+ vx (- x (* speed (min (/ 8 ([] self "ttl")) 1)))))
+		    (set y (+ vy y)))))))
+		(fn (self) (foreach ([] self "sparks") (fn (spark)
+		    (pset ([] spark "x") ([] spark "y") 10)))))))))
 
 ([] plane "draw" (fn (self) (env self (spr
 	(when (> lives 0)
@@ -166,9 +166,9 @@ parens8[[
 
 (set collides (fn (a b) (env a
 	(and (and (< x (env b (+ x width)))
-              (< ([] b "x") (+ x width)))
-         (and (< y (env b (+ y height)))
-              (< ([] b "y") (+ y height)))))))
+	          (< ([] b "x") (+ x width)))
+	     (and (< y (env b (+ y height)))
+	          (< ([] b "y") (+ y height)))))))
 
 (set distance2 (fn (a b) (env a (+
 	(^ (- x ([] b "x")) 2)
