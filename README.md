@@ -30,7 +30,7 @@ could you make an entire game with it? [yes](./examples/baloonbomber.p8), though
 ## interpreter vs compiler
 
 parens-8 comes in two flavors:
-* the interpreter: 332 tokens, found in `interpreter/parens8.lua`
+* the interpreter: 337 tokens, found in `interpreter/parens8.lua`
 * the compiler: 375 tokens, found in `compiler/parens8.lua`
 
 both flavors support the same features, and while heavier in tokens and memory usage, compiled parens-8 is over twice as fast as interpreted parens-8. extensions also take a few more tokens each for compiled parens-8, speaking of which...
