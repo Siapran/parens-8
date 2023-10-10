@@ -1,22 +1,6 @@
 -- parens-8
 -- a lisp interpreter by twomice
 
-function any(matches, inv)
-	return function(val)
-		for match in all(matches) do
-			if (val == match) return not inv
-		end
-		return inv
-	end
-end
-
-function find(list, pred)
-	for i=1,#list do
-		if (pred(list[i])) return i, list[i]
-	end
-	return #list + 1
-end
-
 function zip(keys, values)
 	local res = {}
 	for i=1,#keys do
@@ -25,29 +9,28 @@ function zip(keys, values)
 	return res
 end
 
-function parse(str)
-	local res = {}
-	while #str > 0 do
-		local strip, c = find(str, any(' \n\t', true))
-		str = sub(str, strip)
-		if c == '(' then
-			local list, rest = parse(sub(str, 2))
-			add(res, list)
-			str = rest
-		elseif c == ')' then
-			return res, sub(str, 2)
-		elseif any'\'"'(c) then
-			local close = find(sub(str, 2), any(c))
-			add(res, {"quote", sub(str, 2, close)})
-			str = sub(str, close + 2)
-		else
-			local close = find(str, any' \n\t()"\'')
-			local token = sub(str, 1, close - 1)
-			add(res, tonum(token) or token)
-			str = sub(str, close)
+local _pstr
+local _ppos
+
+function consume(matches, inv)
+	local start = _ppos
+	while (function()
+		for m in all(matches) do
+			if (_pstr[_ppos] == m) return true
 		end
-	end
-	return res, str
+	end)() == inv do _ppos += 1 end
+	return sub(_pstr, start, _ppos - 1)
+end
+
+function parse(off)
+	_ppos += off or 1
+	consume(' \n\t', true)
+	local c = _pstr[_ppos]
+	if (c == '(') return {parse()}, parse()
+	if (c == ')') return
+	if (c == '"' or c == "'") _ppos += 1 return {"quote", consume(c)}, parse()
+	local token = consume' \n\t()'
+	return tonum(token) or token, parse(0)
 end
 
 local builtin = {}
@@ -83,5 +66,6 @@ end
 function id(...) return ... end
 
 function parens8(code)
-	return eval(parse("id "..code), _ENV)
+	_pstr, _ppos = "id " .. code .. ")", 0
+	return eval({parse()}, _ENV)
 end
