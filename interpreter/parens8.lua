@@ -29,7 +29,7 @@ function parse(off)
 	if (c == '(') return {parse()}, parse()
 	if (c == ')') return
 	if (c == '"' or c == "'") _ppos += 1 return {"quote", consume(c)}, parse()
-	local token = consume' \n\t()'
+	local token = consume' \n\t()\'"'
 	return tonum(token) or token, parse(0)
 end
 
