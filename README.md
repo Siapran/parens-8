@@ -114,10 +114,10 @@ while parens-8 supports same multiple return values behavior as lua, it lacks th
 (print "hello, here's a single quote")
 (print 'sure... a single "quote", I think we call this an apostrophe')
 (print "don't make fun of me, you can't even say 'can't'")
-(print "you guys know the `..` operator exists, right?")
+(print "y'all know the `..` operator exists, right?")
 ```
 
-troubleshooting errors is somewhat challenging, as the language itself makes no attempt at diagnostics. debugging parens-8 is slightly easier, as you can at least tell if something is a syntax error or a runtime error.
+troubleshooting errors is somewhat challenging, as the language itself makes no attempt at diagnostics. debugging compiled parens-8 is slightly easier, as you can at least tell if something is a syntax error or a runtime error.
 
 ## misc
 
