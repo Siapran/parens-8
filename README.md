@@ -107,7 +107,7 @@ parens8[[
 ```
 this also applies when using the `env`, `let` and `for` builtin extensions.
 
-while parens-8 supports same multiple return values behavior as lua, it lacks the `...` syntax for variadics. the `id`, `select`, `pack` and `unpack` functions should be leveraged when handling parameter packs.
+while parens-8 supports the same multiple return values behavior as lua, it lacks the `...` syntax for variadics. the `id`, `select`, `pack` and `unpack` functions should be leveraged when handling parameter packs.
 
 `'` and `"` can't be escaped in parens-8 strings, but you can use either as quotes:
 ```lisp
