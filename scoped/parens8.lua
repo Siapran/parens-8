@@ -32,10 +32,13 @@ end
 
 builtin = {}
 
+function compile(lookup, exp, ...)
+	if (exp) return eval(exp, lookup), compile(lookup, ...)
+end
+
 function eval(exp, lookup)
 	if type(exp) == "string" then
-		local idx, where = lookup(exp)
-		local view = exp == "..." and unpack or rawget
+		local view, idx, where = exp == "..." and unpack or rawget, lookup(exp)
 		return where
 			and function(frame) return view(frame[1][where], idx) end
 			or function(frame) return view(frame, idx) end
@@ -45,58 +48,76 @@ function eval(exp, lookup)
 	end
 	if (type(exp) == "number") return function() return exp end
 
-	local exp1, exp2, exp3 = unpack(exp)
+	local op = builtin[exp[1]]
+	if (op) return op(lookup, unpack(exp, 2))
 
-	if exp1 == "fn" then
-		local locals, captures, key = {}, {}, {}
-		for i,v in ipairs(exp2) do locals[v] = i end
-		local compiled = eval(exp3, function(name)
-			local idx, where = locals[name]
-			if idx then return idx + 1, false end
-			idx, where = lookup(name)
-			captures[where] = true
-			return idx, where or key
-		end)
-		return function(frame)
-			local newupvals = {}
-			for where in pairs(captures) do
-				if where then newupvals[where] = frame[1][where]
-				else newupvals[key] = frame end
-			end
-			return function(...)
-				return compiled{newupvals, ...}
-			end
-		end
-	end
+	local n, compiled = #exp, {compile(lookup, unpack(exp))}
 
-	local n, op, compiled = #exp, builtin[exp1], {}
-	for term in all(exp) do add(compiled, eval(term, lookup)) end
-	if (op) return op(exp, lookup, unpack(compiled, 2))
+	-- local n, compiled = #exp, {}
+	-- for term in all(exp) do add(compiled, eval(term, lookup)) end
+	-- if (op) return op(exp, lookup, unpack(compiled, 2))
 
 	return function(frame)
+		local fun = compiled[1](frame)
+		if (n < 2) return fun()
 		local function apply(i)
 			if (i < n) return compiled[i](frame), apply(i + 1)
 			return compiled[i](frame)
 		end
-		local fun = compiled[1](frame)
-		if (n > 1) return fun(apply(2))
-		return fun()
+		return fun(apply(2))
 	end
 end
 
-function builtin:quote() return function() return self[2] end end
-function builtin:set(lookup, _, a2)
-	local idx, where = lookup(self[2])
-	return where
-		and function(frame) rawset(frame[1][where], idx, a2(frame)) end
-		or function(frame) rawset(frame, idx, a2(frame)) end
+function builtin:fn(exp2, exp3)
+	local locals, captures, key = {}, {}, {}
+	for i,v in ipairs(exp2) do locals[v] = i end
+	local compiled = eval(exp3, function(name)
+		local idx, where = locals[name]
+		if idx then return idx + 1, false end
+		idx, where = self(name)
+		captures[where] = true
+		return idx, where or key
+	end)
+	return function(frame)
+		local newupvals = {}
+		for where in pairs(captures) do
+			if where then newupvals[where] = frame[1][where]
+			else newupvals[key] = frame end
+		end
+		return function(...)
+			return compiled{newupvals, ...}
+		end
+	end
 end
-function builtin:when(_, a1, a2, a3)
+
+function builtin:quote(exp2) return function() return exp2 end end
+function builtin:set(exp2, exp3)
+	local compiled, idx, where = eval(exp3, self), self(exp2)
+	return where
+		and function(frame) rawset(frame[1][where], idx, compiled(frame)) end
+		or function(frame) rawset(frame, idx, compiled(frame)) end
+end
+function builtin:when(...)
+	local a1, a2, a3 = compile(self, ...)
 	return function(frame)
 		if (a1(frame)) return a2(frame)
 		if (a3) return a3(frame)
 	end
 end
+
+-- function builtin:quote() return function() return self[2] end end
+-- function builtin:set(lookup, _, a2)
+-- 	local idx, where = lookup(self[2])
+-- 	return where
+-- 		and function(frame) rawset(frame[1][where], idx, a2(frame)) end
+-- 		or function(frame) rawset(frame, idx, a2(frame)) end
+-- end
+-- function builtin:when(_, a1, a2, a3)
+-- 	return function(frame)
+-- 		if (a1(frame)) return a2(frame)
+-- 		if (a3) return a3(frame)
+-- 	end
+-- end
 
 function id(...) return ... end
 
