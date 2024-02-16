@@ -36,7 +36,7 @@ function eval(exp, lookup)
 	if type(exp) == "string" then
 		local idx, where = lookup(exp)
 		return where
-			and function(_, upvals) return upvals[where][idx] end
+			and function(frame) return frame.uv[where][idx] end
 			or function(frame) return frame[idx] end
 	end
 	if (type(exp) == "number") return function() return exp end
@@ -53,14 +53,14 @@ function eval(exp, lookup)
 			captures[where] = true
 			return idx, where or key
 		end)
-		return function(frame, upvals)
+		return function(frame)
 			local newupvals = {}
 			for where in pairs(captures) do
-				if where then newupvals[where] = upvals[where]
+				if where then newupvals[where] = frame.uv[where]
 				else newupvals[key] = frame end
 			end
 			return function(...)
-				return compiled({...}, newupvals)
+				return compiled({uv = newupvals, ...})
 			end
 		end
 	end
@@ -69,12 +69,14 @@ function eval(exp, lookup)
 	for term in all(exp) do add(compiled, eval(term, lookup)) end
 	if (op) return op(exp, lookup, unpack(compiled, 2))
 
-	return function(frame, upvals)
+	return function(frame)
 		local function apply(i)
-			if (i < n) return compiled[i](frame, upvals), apply(i + 1)
-			return compiled[i](frame, upvals)
+			if (i < n) return compiled[i](frame), apply(i + 1)
+			return compiled[i](frame)
 		end
-		if (n > 1) return compiled[1](frame, upvals)(apply(2))
+		local fun = compiled[1](frame)
+		if (n > 1) return fun(apply(2))
+		return fun()
 	end
 end
 
@@ -82,13 +84,13 @@ function builtin:quote() return function() return self[2] end end
 function builtin:set(lookup, _, a2)
 	local idx, where = lookup(self[2])
 	return where
-		and function(frame, upvals) upvals[where][idx] = a2(frame, upvals) end
-		or function(frame, upvals) frame[idx] = a2(frame, upvals) end
+		and function(frame) frame.uv[where][idx] = a2(frame) end
+		or function(frame) frame[idx] = a2(frame) end
 end
 function builtin:when(_, a1, a2, a3)
-	return function(...)
-		if (a1(...)) return a2(...)
-		if (a3) return a3(...)
+	return function(frame)
+		if (a1(frame)) return a2(frame)
+		if (a3) return a3(frame)
 	end
 end
 
@@ -96,5 +98,5 @@ function id(...) return ... end
 
 function parens8(code)
 	_pstr, _ppos = "id " .. code .. ")", 0
-	return eval({parse()}, function(name) return name, 1 end)({}, {_ENV})
+	return eval({parse()}, function(name) return name, 1 end)({uv = {_ENV}})
 end
