@@ -35,9 +35,13 @@ builtin = {}
 function eval(exp, lookup)
 	if type(exp) == "string" then
 		local idx, where = lookup(exp)
+		local view = exp == "..." and unpack or rawget
 		return where
-			and function(frame) return frame[1][where][idx] end
-			or function(frame) return frame[idx] end
+			and function(frame) return view(frame[1][where], idx) end
+			or function(frame) return view(frame, idx) end
+		-- return where
+		-- 	and function(frame) return frame[1][where][idx] end
+		-- 	or function(frame) return frame[idx] end
 	end
 	if (type(exp) == "number") return function() return exp end
 
@@ -60,7 +64,7 @@ function eval(exp, lookup)
 				else newupvals[key] = frame end
 			end
 			return function(...)
-				return compiled({newupvals, ...})
+				return compiled{newupvals, ...}
 			end
 		end
 	end
@@ -84,8 +88,8 @@ function builtin:quote() return function() return self[2] end end
 function builtin:set(lookup, _, a2)
 	local idx, where = lookup(self[2])
 	return where
-		and function(frame) frame[1][where][idx] = a2(frame) end
-		or function(frame) frame[idx] = a2(frame) end
+		and function(frame) rawset(frame[1][where], idx, a2(frame)) end
+		or function(frame) rawset(frame, idx, a2(frame)) end
 end
 function builtin:when(_, a1, a2, a3)
 	return function(frame)
