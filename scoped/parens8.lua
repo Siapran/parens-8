@@ -36,7 +36,7 @@ function eval(exp, lookup)
 	if type(exp) == "string" then
 		local idx, where = lookup(exp)
 		return where
-			and function(frame) return frame.uv[where][idx] end
+			and function(frame) return frame[1][where][idx] end
 			or function(frame) return frame[idx] end
 	end
 	if (type(exp) == "number") return function() return exp end
@@ -48,7 +48,7 @@ function eval(exp, lookup)
 		for i,v in ipairs(exp2) do locals[v] = i end
 		local compiled = eval(exp3, function(name)
 			local idx, where = locals[name]
-			if idx then return idx, false end
+			if idx then return idx + 1, false end
 			idx, where = lookup(name)
 			captures[where] = true
 			return idx, where or key
@@ -56,11 +56,11 @@ function eval(exp, lookup)
 		return function(frame)
 			local newupvals = {}
 			for where in pairs(captures) do
-				if where then newupvals[where] = frame.uv[where]
+				if where then newupvals[where] = frame[1][where]
 				else newupvals[key] = frame end
 			end
 			return function(...)
-				return compiled({uv = newupvals, ...})
+				return compiled({newupvals, ...})
 			end
 		end
 	end
@@ -84,7 +84,7 @@ function builtin:quote() return function() return self[2] end end
 function builtin:set(lookup, _, a2)
 	local idx, where = lookup(self[2])
 	return where
-		and function(frame) frame.uv[where][idx] = a2(frame) end
+		and function(frame) frame[1][where][idx] = a2(frame) end
 		or function(frame) frame[idx] = a2(frame) end
 end
 function builtin:when(_, a1, a2, a3)
@@ -98,5 +98,5 @@ function id(...) return ... end
 
 function parens8(code)
 	_pstr, _ppos = "id " .. code .. ")", 0
-	return eval({parse()}, function(name) return name, 1 end)({uv = {_ENV}})
+	return eval({parse()}, function(name) return name, 1 end)({{_ENV}})
 end
