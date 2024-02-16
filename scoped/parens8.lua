@@ -55,8 +55,8 @@ function eval(exp, lookup)
 		end)
 		return function(frame, upvals)
 			local newupvals = {}
-			for cap in pairs(captures) do
-				if cap then newupvals[cap] = upvals[cap]
+			for where in pairs(captures) do
+				if where then newupvals[where] = upvals[where]
 				else newupvals[key] = frame end
 			end
 			return function(...)
