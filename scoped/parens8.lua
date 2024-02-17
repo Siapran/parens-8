@@ -30,12 +30,32 @@ end
 
 function compile(exp, lookup)
 	if type(exp) == "string" then
+
+		-- uncomment for field syntax: (print a.b.c)
+
+		-- local fields = split(exp, ".")
+		-- exp = deli(fields, 1)
+
 		local idx, where = lookup(exp)
-		-- if exp == "..." then  -- uncomment for variadics support (29 tokens)
+
+		-- if fields[1] then
+		-- 	local function view(tab)
+		-- 		for field in all(fields) do tab = tab[field] end
+		-- 		return tab
+		-- 	end
+		-- 	return where
+		-- 		and function(frame) return view(frame[1][where][idx]) end
+		-- 		or function(frame) return view(frame[idx]) end
+		-- end
+
+		-- uncomment for variadics support: (fn (foo, ...) (foo ...))
+
+		-- if exp == "..." then
 		-- 	return where
 		-- 		and function(frame) return unpack(frame[1][where], idx) end
 		-- 		or function(frame) return unpack(frame, idx) end
 		-- end
+
 		return where
 			and function(frame) return frame[1][where][idx] end
 			or function(frame) return frame[idx] end
@@ -82,12 +102,33 @@ function builtin:fn(exp2, exp3)
 end
 
 function builtin:quote(exp2) return function() return exp2 end end
+
 function builtin:set(exp2, exp3)
+	-- uncomment for field syntax: (set a.b.c 42)
+
+	-- local fields = split(exp2, ".")
+	-- exp2 = deli(fields, 1)
+	-- local last = deli(fields)
+
 	local compiled, idx, where = compile(exp3, self), self(exp2)
+
+	-- if last then
+	-- 	local function view(tab)
+	-- 		for field in all(fields) do tab = tab[field] end
+	-- 		return tab
+	-- 	end
+	-- 	return where
+	-- 		and function(frame)
+	-- 			view(frame[1][where][idx])[last] = compiled(frame)
+	-- 		end
+	-- 		or function(frame) view(frame[idx])[last] = compiled(frame) end
+	-- end
+
 	return where
 		and function(frame) frame[1][where][idx] = compiled(frame) end
 		or function(frame) frame[idx] = compiled(frame) end
 end
+
 function builtin:when(...)
 	local a1, a2, a3 = compile_n(self, ...)
 	return function(frame)
