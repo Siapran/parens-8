@@ -1,4 +1,4 @@
--- parens-8
+-- parens-8 v1
 -- a lisp interpreter by twomice
 
 function zip(keys, values)
@@ -8,9 +8,6 @@ function zip(keys, values)
 	end
 	return res
 end
-
-local _pstr
-local _ppos
 
 function consume(matches, inv)
 	local start = _ppos

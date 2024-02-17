@@ -1,4 +1,4 @@
--- parens-8
+-- parens-8 v2
 -- a lisp interpreter by twomice
 
 function zip(keys, values)
@@ -8,9 +8,6 @@ function zip(keys, values)
 	end
 	return res
 end
-
-local _pstr
-local _ppos
 
 function consume(matches, inv)
 	local start = _ppos
@@ -35,22 +32,26 @@ end
 
 builtin = {}
 
-local function eval(exp)
+local function compile(exp)
 	if (type(exp) == "string") return function(env) return env[exp] end
 	if (type(exp) == "number") return function() return exp end
 	local n = #exp
 	local op = builtin[exp[1]]
 	local compiled = {}
-	for i=1,n do compiled[i] = eval(exp[i]) end
+	for i=1,n do compiled[i] = compile(exp[i]) end
 	if (op) return op(exp, unpack(compiled, 2))
 
-	return function(env)
-		local function apply(i)
-			if (i < n) return compiled[i](env), apply(i + 1)
-			if (i == n) return compiled[i](env)
+	return n < 2
+		and function(env)
+			return compiled[1](env)()
 		end
-		return compiled[1](env)(apply(2))
-	end
+		or function(env)
+			local function apply(i)
+				if (i < n) return compiled[i](env), apply(i + 1)
+				return compiled[i](env)
+			end
+			return compiled[1](env)(apply(2))
+		end
 end
 
 function builtin:quote() return function() return self[2] end end
@@ -77,5 +78,5 @@ function id(...) return ... end
 
 function parens8(code)
 	_pstr, _ppos = "id " .. code .. ")", 0
-	return eval({parse()})(_ENV)
+	return compile({parse()})(_ENV)
 end
