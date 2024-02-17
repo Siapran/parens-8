@@ -48,7 +48,7 @@ function compile(exp, lookup)
 		-- 		or function(frame) return view(frame[idx]) end
 		-- end
 
-		-- uncomment for variadics support: (fn (foo, ...) (foo ...))
+		-- uncomment for variadics support: (fn (foo ...) (foo ...))
 
 		-- if exp == "..." then
 		-- 	return where
