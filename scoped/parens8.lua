@@ -1,14 +1,6 @@
 -- parens-8
 -- a lisp interpreter by twomice
 
-function zip(keys, values)
-	local res = {}
-	for i=1,#keys do
-		res[keys[i]] = values[i]
-	end
-	return res
-end
-
 function consume(matches, inv)
 	local start = _ppos
 	while (function()
