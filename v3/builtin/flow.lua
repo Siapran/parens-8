@@ -1,13 +1,27 @@
 -- if you don't feel like using IIFEs
 -- (let ((a 42) (b "foo")) (print (.. b a)))
-function builtin:let(exp2, exp3)
-	local names, values = {}, {}
-	for binding in all(exp2) do
-		add(names, binding[1])
-		add(values, binding[2])
-	end
-	return compile({{"fn", names, exp3}, unpack(values)}, self)
-end
+
+-- function builtin:let(exp2, exp3)
+-- 	local names, values = {}, {}
+-- 	for binding in all(exp2) do
+-- 		add(names, binding[1])
+-- 		add(values, binding[2])
+-- 	end
+-- 	return compile({{"fn", names, exp3}, unpack(values)}, self)
+-- end
+
+parens8[[
+(rawset builtin "let" (fn (lookup exp2 exp3) (
+	(fn (names values) (select 2
+		(foreach exp2 (fn (binding) (id
+			(add names (rawget binding 1))
+			(add values (rawget binding 2))
+		)))
+		(compile (pack (pack "fn" names exp3) (unpack values)) lookup)
+	))
+	(quote ()) (quote ())
+)))
+]]
 
 -- (while (< x 3) (set x (+ 1 x))
 def_builtin("while", function (frame, a1, a2)
