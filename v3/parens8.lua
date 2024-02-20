@@ -22,6 +22,8 @@ function parse(off)
 	return tonum(token) or token, parse(0)
 end
 
+function id(...) return ... end
+
 builtin = {}
 
 function compile_n(lookup, exp, ...)
@@ -65,22 +67,26 @@ function compile(exp, lookup)
 	local op = builtin[exp[1]]
 	if (op) return op(lookup, unpack(exp, 2))
 
-	local n, compiled = #exp, {compile_n(lookup, unpack(exp))}
-	return n < 2
+	local args = {compile_n(lookup, unpack(exp))}
+	local fun, n = deli(args, 1), #args
+	return n > 0
 		and function(frame)
-			return compiled[1](frame)()
+			local function apply(i)
+				if (i < n) return args[i](frame), apply(i + 1)
+				return args[i](frame)
+			end
+			return fun(frame)(apply(1))
 		end
 		or function(frame)
-			local function apply(i)
-				if (i < n) return compiled[i](frame), apply(i + 1)
-				return compiled[i](frame)
-			end
-			return compiled[1](frame)(apply(2))
+			return fun(frame)()
 		end
 end
 
+function builtin:quote(exp2) return function() return exp2 end end
+
 function builtin:fn(exp2, exp3)
-	local locals, captures, key = {}, {}, {}
+	local locals, captures, key =
+		parens8[[(quote ()) (quote ()) (quote ())]]
 	for i,v in ipairs(exp2) do locals[v] = i end
 	local compiled = compile(exp3, function(name)
 		local idx, where = locals[name]
@@ -89,28 +95,41 @@ function builtin:fn(exp2, exp3)
 		captures[where] = true
 		return idx, where or key
 	end)
-	return function(frame)
-		local upvals = {}
-		for where in pairs(captures) do
-			if where then upvals[where] = frame[1][where]
-			else upvals[key] = frame end
+	return captures[false]
+		and function(frame)
+			local upvals = {[key] = frame}
+			for where in pairs(captures) do
+				if (where) upvals[where] = frame[1][where]
+			end
+			return function(...)
+				return compiled{upvals, ...}
+			end
 		end
-		return function(...)
-			return compiled{upvals, ...}
+		or function(frame)
+			return function(...)
+				return compiled{frame[1], ...}
+			end
 		end
-	end
 end
 
-function builtin:quote(exp2) return function() return exp2 end end
-
-function builtin:set(exp2, exp3)
+function builtin.set(...)
 	-- uncomment for field syntax: (set a.b.c 42)
 
-	-- local fields = split(exp2, ".")
-	-- exp2 = deli(fields, 1)
-	-- local last = deli(fields)
+	-- local fields, last, compiled, idx, where = parens8[[
+	-- 	(fn (lookup exp2 exp3) ((fn (fields) (id
+	-- 		fields
+	-- 		(deli fields)
+	-- 		(compile exp3 lookup)
+	-- 		(lookup (deli fields 1))
+	-- 	)) (split exp2 ".")))
+	-- ]](...)
 
-	local compiled, idx, where = compile(exp3, self), self(exp2)
+	local compiled, idx, where = parens8[[
+		(fn (lookup exp2 exp3) (id
+			(compile exp3 lookup)
+			(lookup exp2)
+		))
+	]](...)
 
 	-- if last then
 	-- 	local function view(tab)
@@ -136,8 +155,6 @@ function builtin:when(...)
 		if (a3) return a3(frame)
 	end
 end
-
-function id(...) return ... end
 
 function parens8(code)
 	_pstr, _ppos = "id " .. code .. ")", 0
