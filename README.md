@@ -25,17 +25,33 @@ parens-8 comes with four base builtins:
 * `(when cond a b)`, for conditionals, aka `(function() if cond then return a else return b end end)()`
 * `(quote expr)`, for preventing an expression from being evaluated.
 
-note that `"foo"` is translated into `(quote foo)` by the parser. you can also create lua arrays this way: `(quote (1 2 3))`
+note that `"foo"` is translated into `(quote foo)` by the parser. you can also create lua arrays and `nil` this way: `(quote (1 2 3))`, `(quote)`
 
 while it's possible to write [an entire game](./examples/baloonbomber.p8) in parens-8, it's best to keep most of your code as plain lua. use parens-8 for code that you know is stable, and where performance isn't critical. we'll elaborate on performance and use cases further ahead.
 
-## compiled vs interpreted
+## parens-8 versions
 
-parens-8 comes in two flavors:
-* the compiler: 375 tokens, found in `compiler/parens8.lua`
-* the interpreter: 337 tokens, found in `interpreter/parens8.lua`
+parens-8 comes in three different versions:
+* v3: 500 tokens, the fastest, safest and most memory efficient version.
+* v2: 375 tokens, pretty fast, reasonably memory efficient, a couple pitfalls.
+* v1: 337 tokens, substantially slower, uses more memory, same pitfalls as v2.
 
-compiled parens-8 has much better performance than interpreted parens-8, both in speed and memory usage, for a slightly higher token cost. if unsure, use compiled parens-8: the two flavors are completely interchangeable (the compiler doesn't require more setup than the interpreter, the compile step is done within pico-8). the interpreter is here if you _absolutely_ can't afford the extra 38 tokens.
+v1 is an interpreter that evaluates the AST as it runs the code. this makes it the lightest version in terms of token usage.
+v2 is substantially faster than v1: it compiles the AST into closures that perform only the required computations. think of it as a bytecode compiler that compiles to Lua closures instead of a portable binary.
+v3 takes the compiler one step further and compiles _scope lookup_ into proper locals, upvalues, and globals. v1 and v2 both use runtime scopes implemented as tables with nested `__index` metamethods.
+
+## performance
+
+it took some work, but parens-8 v3 is pretty close to [picoscript](https://carlc27843.github.io/post/picoscript/). benchmarking parens-8 against native lua and the hand-expanded picoscript closure from the blog post gives the following results for the `glstate` function defined by each language:
+| language | cycles | cycles / native | native / cycles |
+| --- | --- | --- | --- |
+| native lua | 11 | 1 | 100% |
+| picoscript | 94 | 8.54 | 11.7% |
+| parens-8 v3 | 117 | 10.63 | 9.4% |
+| parens-8 v2 |  |  |  |
+| parens-8 v1 |  |  |  |
+
+parens-8 tries to balance speed, memory usage, token cost, and flexibility. improving any one metric usually comes at the cost of another. if you have ideas to improve parens-8, feel free to contribute with a pull request or through the issue tracker.
 
 ## builtin extensions
 
@@ -48,40 +64,22 @@ while designed as a lightweight runtime for offloading code to strings and ROM, 
                (+ (fib (- x 1))
                   (fib (- x 2))))))
 
-(set mytable (zip (pack "a" "b" "c")
-                  (pack 1 2 3)))
+(set mytable (table (a 1) (b 2) (c 3) 4 5 6))
 
 (for ((k v) (pairs mytable))
      (print (.. k (.. ": " (.. v (.. " -> " (fib v)))))))
 
 ([] mytable "b" 42)
-(print ([] mytable "b"))
-
-(env mytable
-     (id (print b)
-         (set b "hello!")))
+(let ((print print) (id id))
+     (env mytable (id
+          (print b)
+          (set b 256))))
 (print ([] mytable "b"))
 ```
 
-extensions can be found in `flavor/builtin/`. include the extensions you need, and feel free to comment out builtins you aren't using.
+extensions can be found in `v*/builtin/`. include the extensions you need, and feel free to comment out builtins you aren't using.
 
-custom builtins may be defined from both lua and parens-8. compiled builtins are written slightly differently than interpreted builtins:
-* interpreted builtins are best defined through `def_builtin`, found in `interpreter/builtin/def_builtin.lua`
-* compiled builtins are a bit trickier. study the files `compiler/parens8.lua` and `compiler/builtin/operators.lua`
-
-while builtin definitions and the code that uses them can be in the same `parens8` interpreter call, the same cannot be said of the compiler. if you're defining a builtin from within compiled parens-8, it won't be available until the next `parens8` invocation.
-
-## performance
-
-well, it's no [picoscript](https://carlc27843.github.io/post/picoscript/), but compiled parens-8 isn't too far off. benchmarking parens-8 against native lua and the hand-expanded picoscript closure from the blog post gives the following results for the `glstate` function defined by each language:
-| language | time / native | native / time |
-| --- | --- | --- |
-| native lua | 1 | 100% |
-| picoscript | 5.2007 | 19.2276% |
-| parens-8 compiler | 9.0315 | 11.0718% |
-| parens-8 interpreter | 18.2374 | 5.4825% |
-
-parens-8 is first and foremost designed for "glue" code: bits and pieces of logic you'd rather pay for in overhead instead of tokens. what parens-8 doesn't have in performance, it makes up for in flexibility and accessibility.
+custom builtins may be defined from both lua and parens-8. each version has a different way of defining builtins. study the `def_builtin.lua` file of each version.
 
 ## ROM utilities
 
@@ -90,15 +88,23 @@ if (when) you run out of chars in your cart's code, you can store more code in t
 * `length = writerom(small, address, filename)` `cstore`s your string in the data of `filename`
 * `loaded = parens8(readrom(address, length, filename))` reads and parses your code back at you.
 
-`readrom` is implemented in pure parens-8, without any extensions! it's the perfect example of glue code.
+`readrom` is implemented in pure parens-8, without any extensions, so you can add it to your cart essentailly for free.
 
 [this pico-8 cart](https://www.lexaloffle.com/bbs/?tid=54486) loads its _entire_ game logic with `readrom`.
 
 ## limitations
 
-parens-8 has a few limitations that are probably here to stay, in the interest of token economy.
+`'` and `"` can't be escaped in parens-8 strings, but you can use either as quotes:
+```lisp
+(print "hello, here's a single quote")
+(print 'sure... a single "quote", I think we call this an apostrophe')
+(print "don't make fun of me, you can't even say 'can't'")
+(print "y'all know the `..` operator exists, right?")
+```
 
-variables with `nil` values become "invisible", that is:
+troubleshooting errors is somewhat challenging, as the language itself makes no attempt at diagnostics. debugging compiled parens-8 (v2 and v3) is slightly easier, as you can at least tell if something is a syntax error or a runtime error.
+
+in parens-8 v1 and v2 (fixed in v3!) variables with `nil` values become _invisible_, that is:
 ```lua
 x = "oops"
 parens8[[
@@ -109,19 +115,14 @@ parens8[[
  42)
 ]] -- prints "42", then "oops"
 ```
-this also applies when using the `env`, `let` and `for` builtin extensions.
+this pitfall is _extremely_ easy to run into accidentally, and can be hard to troubleshoot. v3 fixes this issue completely.
 
-while parens-8 supports the same multiple return values behavior as lua, it lacks the `...` syntax for variadics. the `id`, `select`, `pack` and `unpack` functions should be leveraged when handling parameter packs.
-
-`'` and `"` can't be escaped in parens-8 strings, but you can use either as quotes:
+parens-8 v3 offers optional support for variadics with the `...` syntax (disabled by default).
 ```lisp
-(print "hello, here's a single quote")
-(print 'sure... a single "quote", I think we call this an apostrophe')
-(print "don't make fun of me, you can't even say 'can't'")
-(print "y'all know the `..` operator exists, right?")
+(set foo (fn (a ...)
+     (when a (id (print a) (foo ...)))))
 ```
-
-troubleshooting errors is somewhat challenging, as the language itself makes no attempt at diagnostics. debugging compiled parens-8 is slightly easier, as you can at least tell if something is a syntax error or a runtime error.
+all versions of parens-8 support the same behavior as lua for multiple return values. so even without the variadics support, functions like `id`, `select`, `pack` and `unpack` can and should be leveraged to your advantage.
 
 ## misc
 
@@ -142,8 +143,7 @@ parens-8, like lua, supports tail call elimination. this can be leveraged if you
                           (.. " " i))))))
 (loop 1)
 ```
-
-the compiler separates the AST traversal from evaluation by returning a chain of closures with the pre-compiled AST held in upvalues. this does make each `parens8` call slower, but functions defined within that call are much faster.
+parens-8 v3 offers this pattern as the `loop` builtin for the price of 1 (one) token. it's the poor man's while loop.
 
 code examples so far have used proper lisp indentation, which may be confusing for some. it's perfectly valid to format your parens-8 code with a style closer to lua:
 ```lisp
@@ -160,8 +160,9 @@ this is [what luchak does in rp8](https://github.com/luchak/rp8/blob/main/src/rp
 
 ## acknowledgements
 
-* Peter Norvig's [excellent tutorial](https://norvig.com/lispy.html) on how to implement your own lisp.
-* [luchak](https://github.com/luchak) helped quite a bit with the compiler, and I borrowed a few tricks from his own pico-8 lisp implementations.
+* Peter Norvig's [tutorial](https://norvig.com/lispy.html) got me started with parens-8 v0 and v1.
+* [luchak](https://github.com/luchak) helped quite a bit with parens-8 v2, and I borrowed a few tricks from his own pico-8 lisp implementations.
+* Robert Nystrom's book: Crafting Interpreters. specifically, the [chapter on closures](https://craftinginterpreters.com/closures.html#upvalues) was of great help when designing parens-8 v3.
 * [carlc27843](https://carlc27843.github.io/), for the tantalizing [blog post](https://carlc27843.github.io/post/picoscript/) that inspired me to implement my own extension language.
-* [Wuff](https://wuffmakesgames.itch.io/), for integrating parens-8 into PicOS, and putting up with my shenanigans.
+* [Wuff](https://wuffmakesgames.itch.io/), for playing around with parens-8 v0 and putting up with my shenanigans.
 * the pico-8 discord server, for all the help, inspiration and resources a developer could ask for.
