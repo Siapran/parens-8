@@ -32,7 +32,7 @@ while it's possible to write [an entire game](./examples/baloonbomber.p8) in par
 ## parens-8 versions
 
 parens-8 comes in three different versions:
-* v3: 500 tokens, the fastest, safest and most memory efficient version.
+* v3: 509 tokens, the fastest, safest and most memory efficient version.
 * v2: 375 tokens, pretty fast, reasonably memory efficient, a couple pitfalls.
 * v1: 337 tokens, substantially slower, uses more memory, same pitfalls as v2.
 
