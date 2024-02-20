@@ -5,6 +5,7 @@ __lua__
 -- a sidescroller in parens-8
 
 #include ../v2/parens8.lua
+#include ../v2/builtin/def_builtin.lua
 #include ../v2/builtin/operators.lua
 #include ../v2/builtin/env.lua
 #include ../v2/builtin/flow.lua
