@@ -4,7 +4,9 @@ a tiny lisp for your pico-8 carts
 
 ## overview
 
-parens-8 is designed for maximum interoperability with lua. function, tables and values can be passed and used seamlessly between lua and parens-8. the `parens8` function evaluates parens-8 expressions passed as strings:
+parens-8 is a tool for bypassing the pico-8 token limit. it takes up 5% of the allowed 8192 tokens, and gives you practically infinite code space in return: store extra code in strings or cart ROM, load it during init, run it like any lua code.
+
+parens-8 is designed for maximum interoperability with lua. functions, tables and values can be passed and used seamlessly between lua and parens-8. the `parens8` function evaluates parens-8 expressions passed as strings:
 
 ```lua
 a, b, c = parens8[[1 2 3]]
@@ -25,15 +27,15 @@ parens-8 comes with four base builtins:
 
 note that `"foo"` is translated into `(quote foo)` by the parser. you can also create lua arrays this way: `(quote (1 2 3))`
 
-could you make an entire game with it? [yes](./examples/baloonbomber.p8), though you probably shouldn't.
+while it's possible to write [an entire game](./examples/baloonbomber.p8) in parens-8, it's best to keep most of your code as plain lua. use parens-8 for code that you know is stable, and where performance isn't critical. we'll elaborate on performance and use cases further ahead.
 
-## interpreter vs compiler
+## compiled vs interpreted
 
 parens-8 comes in two flavors:
-* the interpreter: 337 tokens, found in `interpreter/parens8.lua`
 * the compiler: 375 tokens, found in `compiler/parens8.lua`
+* the interpreter: 337 tokens, found in `interpreter/parens8.lua`
 
-both flavors support the same features, and while heavier in tokens and memory usage, compiled parens-8 is over twice as fast as interpreted parens-8. extensions also take a few more tokens each for compiled parens-8, speaking of which...
+compiled parens-8 has much better performance than interpreted parens-8, both in speed and memory usage, for a slightly higher token cost. if unsure, use compiled parens-8: the two flavors are completely interchangeable (the compiler doesn't require more setup than the interpreter, the compile step is done within pico-8). the interpreter is here if you _absolutely_ can't afford the extra 38 tokens.
 
 ## builtin extensions
 
@@ -76,8 +78,8 @@ well, it's no [picoscript](https://carlc27843.github.io/post/picoscript/), but c
 | --- | --- | --- |
 | native lua | 1 | 100% |
 | picoscript | 5.2007 | 19.2276% |
-| parens-8 interpreter | 18.2374 | 5.4825% |
 | parens-8 compiler | 9.0315 | 11.0718% |
+| parens-8 interpreter | 18.2374 | 5.4825% |
 
 parens-8 is first and foremost designed for "glue" code: bits and pieces of logic you'd rather pay for in overhead instead of tokens. what parens-8 doesn't have in performance, it makes up for in flexibility and accessibility.
 
@@ -89,6 +91,8 @@ if (when) you run out of chars in your cart's code, you can store more code in t
 * `loaded = parens8(readrom(address, length, filename))` reads and parses your code back at you.
 
 `readrom` is implemented in pure parens-8, without any extensions! it's the perfect example of glue code.
+
+[this pico-8 cart](https://www.lexaloffle.com/bbs/?tid=54486) loads its _entire_ game logic with `readrom`.
 
 ## limitations
 
@@ -139,9 +143,20 @@ parens-8, like lua, supports tail call elimination. this can be leveraged if you
 (loop 1)
 ```
 
-the "compiler" separates the AST traversal from evaluation by returning a chain of closures with the pre-compiled AST held in upvalues. this does make each `parens8` call slower, but functions defined within that call are much faster.
+the compiler separates the AST traversal from evaluation by returning a chain of closures with the pre-compiled AST held in upvalues. this does make each `parens8` call slower, but functions defined within that call are much faster.
 
-there's a, uh, parens-8 syntax highlighter? I guess? it colors literals and matching parenthesis pairs, using p8scii control codes.
+code examples so far have used proper lisp indentation, which may be confusing for some. it's perfectly valid to format your parens-8 code with a style closer to lua:
+```lisp
+(set my_function (fn (x) (id
+     (set x (+ x 1))
+     (print x)
+     (when (< x 10)
+          (print "lower than 10")
+          (print "higher than 10")
+     )
+)))
+```
+this is [what luchak does in rp8](https://github.com/luchak/rp8/blob/main/src/rp8.p8#L19) (using a different pico-8 lisp). use whatever makes the pill easier to swallow.
 
 ## acknowledgements
 
