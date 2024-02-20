@@ -4,10 +4,10 @@ __lua__
 -- baloon bomber
 -- a sidescroller in parens-8
 
-#include ../compiler/parens8.lua
-#include ../compiler/builtin/operators.lua
-#include ../compiler/builtin/env.lua
-#include ../compiler/builtin/flow.lua
+#include ../v2/parens8.lua
+#include ../v2/builtin/operators.lua
+#include ../v2/builtin/env.lua
+#include ../v2/builtin/flow.lua
 
 parens8[[
 (set gravity .4)
