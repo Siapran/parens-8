@@ -1,4 +1,4 @@
--- slightly simplified: {[0] = 1} works, but not {[foo] = 1}
+-- slightly simplified: {[0] = 1} works, {[foo] = 1} doesn't
 -- (table (foo 1) (0 2) 3 4 5 6)
 -- (table (x 1) (y 2))
 function builtin:table(...)

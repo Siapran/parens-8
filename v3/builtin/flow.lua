@@ -21,10 +21,33 @@ parens8[[
 	))
 	(quote ()) (quote ())
 )))
+
+(rawset builtin "loop" (fn (lookup exp2 exp3) (compile
+	(pack (pack "fn" (pack "__ps8_loop") (pack "id"
+		(pack "set" "__ps8_loop" (pack "fn" (pack)
+			(pack "when" exp2 (pack "__ps8_loop" exp3))
+		))
+		(pack "__ps8_loop")
+	)))
+lookup)))
 ]]
 
+-- the "loop" builtin is a "poor man's while", implemented as a tail recursion.
+-- thanks to lua, such an implementation will not blow up the stack.
+-- if you're really strapped for tokens, it will at least save you the headache
+-- of implementing a tail recursion loop correctly yourself.
+
+-- (fn (__ps8_loop) (id
+-- 	(set __ps8_loop (fn () 
+-- 		(when exp2 (__ps8_loop exp3))
+-- 	))
+-- 	(__ps8_loop)
+-- ))
+
+-- if you *really* need proper loops and can justify the token cost however...
+
 -- (while (< x 3) (set x (+ 1 x))
-def_builtin("while", function (frame, a1, a2)
+def_builtin("while", function(frame, a1, a2)
 	while (a1(frame)) a2(frame)
 end)
 
@@ -32,7 +55,8 @@ end)
 -- (for ((k v) (pairs foo)) (body))
 builtin["for"] = function(lookup, exp2, exp3)
 	local numeric = #exp2 > 2
-	local cbody = compile({"fn", numeric and {exp2[1]} or exp2[1], exp3}, lookup)
+	local cbody =
+		compile({"fn", numeric and {exp2[1]} or exp2[1], exp3}, lookup)
 	if numeric then
 		local a, b, c = compile_n(lookup, unpack(exp2, 2))
 		return function(frame)
@@ -54,3 +78,17 @@ builtin["for"] = function(lookup, exp2, exp3)
 		end
 	end
 end
+
+-- here's your damn seq
+-- returns the last expression
+function builtin:seq(...)
+	local compiled = {compile_n(self, ...)}
+	local last = deli(compiled)
+	return function(frame)
+		for step in all(compiled) do
+			step(frame)
+		end
+		return last(frame)
+	end
+end
+-- was it worth it? just use id or select
