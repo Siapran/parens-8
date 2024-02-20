@@ -15,6 +15,7 @@ function parse(off)
 	_ppos += off or 1
 	consume(' \n\t', true)
 	local c = _pstr[_ppos]
+	-- if (c == ';') consume'\n' return parse()  -- comments support
 	if (c == '(') return {parse()}, parse()
 	if (c == ')') return
 	if (c == '"' or c == "'") _ppos += 1 return {"quote", consume(c)}, parse()
@@ -88,7 +89,7 @@ function builtin:fn(exp2, exp3)
 	local locals, captures, key =
 		parens8[[(quote ()) (quote ()) (quote ())]]
 	for i,v in ipairs(exp2) do locals[v] = i end
-	local compiled = compile(exp3, function(name)
+	local body = compile(exp3, function(name)
 		local idx, where = locals[name]
 		if idx then return idx + 1, false end
 		idx, where = self(name)
@@ -102,12 +103,12 @@ function builtin:fn(exp2, exp3)
 				if (where) upvals[where] = frame[1][where]
 			end
 			return function(...)
-				return compiled{upvals, ...}
+				return body{upvals, ...}
 			end
 		end
 		or function(frame)
 			return function(...)
-				return compiled{frame[1], ...}
+				return body{frame[1], ...}
 			end
 		end
 end
@@ -148,8 +149,8 @@ function builtin.set(...)
 		or function(frame) frame[idx] = compiled(frame) end
 end
 
-function builtin:when(...)
-	local a1, a2, a3 = compile_n(self, ...)
+function builtin.when(...)
+	local a1, a2, a3 = compile_n(...)
 	return function(frame)
 		if (a1(frame)) return a2(frame)
 		if (a3) return a3(frame)

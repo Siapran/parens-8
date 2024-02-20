@@ -81,8 +81,8 @@ end
 
 -- here's your damn seq
 -- returns the last expression
-function builtin:seq(...)
-	local compiled = {compile_n(self, ...)}
+function builtin.seq(...)
+	local compiled = {compile_n(...)}
 	local last = deli(compiled)
 	return function(frame)
 		for step in all(compiled) do
