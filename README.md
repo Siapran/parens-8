@@ -88,7 +88,7 @@ if (when) you run out of chars in your cart's code, you can store more code in t
 * `length = writerom(small, address, filename)` `cstore`s your string in the data of `filename`
 * `loaded = parens8(readrom(address, length, filename))` reads and parses your code back at you.
 
-`readrom` is implemented in pure parens-8, without any extensions, so you can add it to your cart essentailly for free.
+`readrom` is implemented in pure parens-8, without any extensions. you can add it to your cart essentially for free.
 
 [this pico-8 cart](https://www.lexaloffle.com/bbs/?tid=54486) loads its _entire_ game logic with `readrom`.
 
@@ -117,7 +117,7 @@ parens8[[
 ```
 this pitfall is _extremely_ easy to run into accidentally, and can be hard to troubleshoot. v3 fixes this issue completely.
 
-parens-8 v3 offers optional support for variadics with the `...` syntax (disabled by default).
+parens-8 v3 offers optional support for variadics with the `...` syntax (disabled by default):
 ```lisp
 (set foo (fn (a ...)
      (when a (id (print a) (foo ...)))))

@@ -114,7 +114,14 @@ function builtin:fn(exp2, exp3)
 end
 
 function builtin.set(...)
-	-- uncomment for field syntax: (set a.b.c 42)
+	local compiled, idx, where = parens8[[
+		(fn (lookup exp2 exp3) (id
+			(compile exp3 lookup)
+			(lookup exp2)
+		))
+	]](...)
+
+	-- replace above with commented for field syntax: (set a.b.c 42)
 
 	-- local fields, last, compiled, idx, where = parens8[[
 	-- 	(fn (lookup exp2 exp3) ((fn (fields) (id
@@ -124,13 +131,6 @@ function builtin.set(...)
 	-- 		(lookup (deli fields 1))
 	-- 	)) (split exp2 ".")))
 	-- ]](...)
-
-	local compiled, idx, where = parens8[[
-		(fn (lookup exp2 exp3) (id
-			(compile exp3 lookup)
-			(lookup exp2)
-		))
-	]](...)
 
 	-- if last then
 	-- 	local function view(tab)

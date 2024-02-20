@@ -29,7 +29,8 @@ parens8[[
 		))
 		(pack "__ps8_loop")
 	)))
-lookup)))
+	lookup
+)))
 ]]
 
 -- the "loop" builtin is a "poor man's while", implemented as a tail recursion.
