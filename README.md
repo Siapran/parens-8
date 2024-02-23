@@ -158,6 +158,8 @@ code examples so far have used proper lisp indentation, which may be confusing f
 ```
 this is [what luchak does in rp8](https://github.com/luchak/rp8/blob/main/src/rp8.p8#L19) (using a different pico-8 lisp). use whatever makes the pill easier to swallow.
 
+there's a [code highlighter](./misc/highlight.lua). I might make a parens-8 code editor in pico-8 with tools for saving to ROM and such? who knows. it's there. you can try it.
+
 ## acknowledgements
 
 * Peter Norvig's [tutorial](https://norvig.com/lispy.html) got me started with parens-8 v0 and v1.
@@ -165,4 +167,4 @@ this is [what luchak does in rp8](https://github.com/luchak/rp8/blob/main/src/rp
 * Robert Nystrom's book: Crafting Interpreters. specifically, the [chapter on closures](https://craftinginterpreters.com/closures.html#upvalues) was of great help when designing parens-8 v3.
 * [carlc27843](https://carlc27843.github.io/), for the tantalizing [blog post](https://carlc27843.github.io/post/picoscript/) that inspired me to implement my own extension language.
 * [Wuff](https://wuffmakesgames.itch.io/), for playing around with parens-8 v0 and putting up with my shenanigans.
-* the pico-8 discord server, for all the help, inspiration and resources a developer could ask for.
+* the pico-8 discord server, for all the help, inspiration, resources and encouragement a developer could ask for.
