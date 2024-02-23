@@ -84,11 +84,6 @@ custom builtins may be defined from both lua and parens-8. each version has a di
 the core of parens-8 v3 also comes with optional syntax extensions for:
 * field access: `(set self.x (+ self.x self.dx))`
 * variadics: `(fn (...) (foo ...))`
-because of the way upvalues work in v3, parameter packs can also be captured, something native Lua can't do:
-```lisp
-(set store (fn (...)
-     (fn () ...)))
-```
 
 ## ROM utilities
 
@@ -103,6 +98,8 @@ if (when) you run out of chars in your cart's code, you can store more code in t
 
 ## limitations
 
+troubleshooting errors is somewhat challenging, as the language itself makes no attempt at diagnostics. debugging compiled parens-8 (v2 and v3) is slightly easier, as you can at least tell if something is a syntax error or a runtime error.
+
 `'` and `"` can't be escaped in parens-8 strings, but you can use either as quotes:
 ```lisp
 (print "hello, here's a single quote")
@@ -110,8 +107,6 @@ if (when) you run out of chars in your cart's code, you can store more code in t
 (print "don't make fun of me, you can't even say 'can't'")
 (print "y'all know the `..` operator exists, right?")
 ```
-
-troubleshooting errors is somewhat challenging, as the language itself makes no attempt at diagnostics. debugging compiled parens-8 (v2 and v3) is slightly easier, as you can at least tell if something is a syntax error or a runtime error.
 
 in parens-8 v1 and v2 (fixed in v3!) variables with `nil` values become _invisible_, that is:
 ```lua
@@ -126,14 +121,19 @@ parens8[[
 ```
 this pitfall is _extremely_ easy to run into accidentally, and can be hard to troubleshoot. v3 fixes this issue completely.
 
-parens-8 v3 offers optional support for variadics with the `...` syntax (disabled by default):
+## misc
+
+as mentionned above, parens-8 v3 offers optional support for variadics with the `...` syntax (disabled by default):
 ```lisp
-(set foo (fn (a ...)
-     (when a (id (print a) (foo ...)))))
+(set print_all (fn (a ...)
+     (when a (id (print a) (print_all ...)))))
+```
+because of the way upvalues work in v3, parameter packs can also be captured, something native Lua can't do!
+```lisp
+(set store (fn (...)
+     (fn () ...)))
 ```
 all versions of parens-8 support the same behavior as lua for multiple return values. so even without the variadics support, functions like `id`, `select`, `pack` and `unpack` can and should be leveraged to your advantage.
-
-## misc
 
 most lisp flavors have some sort of `progn` builtin for executing sequences of statements, which is equivalent to `(select -1 exp1 exp2 expn)`. in parens-8, the choice was made to use the identity function `function id(...) return ... end` instead. `id` can be used wherever you need to run multiple statements in a single expression, and can also be used whenever you need to return multiple values from a function:
 ```lisp
