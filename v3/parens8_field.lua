@@ -33,7 +33,20 @@ end
 
 function compile(exp, lookup)
 	if type(exp) == "string" then
+		local fields = split(exp, ".")
+		exp = deli(fields, 1)
 		local idx, where = lookup(exp)
+
+		if fields[1] then
+			local function view(tab)
+				for field in all(fields) do tab = tab[field] end
+				return tab
+			end
+			return where
+				and function(frame) return view(frame[1][where][idx]) end
+				or function(frame) return view(frame[idx]) end
+		end
+
 		return where
 			and function(frame) return frame[1][where][idx] end
 			or function(frame) return frame[idx] end
@@ -89,12 +102,27 @@ function builtin:fn(exp2, exp3)
 end
 
 function builtin.set(...)
-	local compiled, idx, where = parens8[[
-		(fn (lookup exp2 exp3) (id
+	local fields, last, compiled, idx, where = parens8[[
+		(fn (lookup exp2 exp3) ((fn (fields) (id
+			fields
+			(deli fields)
 			(compile exp3 lookup)
-			(lookup exp2)
-		))
+			(lookup (deli fields 1))
+		)) (split exp2 ".")))
 	]](...)
+
+	if last then
+		local function view(tab)
+			for field in all(fields) do tab = tab[field] end
+			return tab
+		end
+		return where
+			and function(frame)
+				view(frame[1][where][idx])[last] = compiled(frame)
+			end
+			or function(frame) view(frame[idx])[last] = compiled(frame) end
+	end
+
 	return where
 		and function(frame) frame[1][where][idx] = compiled(frame) end
 		or function(frame) frame[idx] = compiled(frame) end
