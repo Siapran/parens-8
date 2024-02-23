@@ -43,13 +43,13 @@ v3 takes the compiler one step further and compiles _scope lookup_ into proper l
 ## performance
 
 it took some work, but parens-8 v3 is pretty close to [picoscript](https://carlc27843.github.io/post/picoscript/). benchmarking parens-8 against native lua and the hand-expanded picoscript closure from the blog post gives the following results for the `glstate` function defined by each language:
-| language | cycles | cycles / native | native / cycles |
-| --- | --- | --- | --- |
-| native lua | 11 | 1 | 100% |
-| picoscript | 94 | 8.54 | 11.7% |
-| parens-8 v3 | 117 | 10.63 | 9.4% |
-| parens-8 v2 |  |  |  |
-| parens-8 v1 |  |  |  |
+| language | cycles | cycles / native | native / cycles | cycles / picoscript | picoscript / cycles |
+| --- | --- | --- | --- | --- | --- |
+| native lua | 11 | 1 | 100% | | |
+| picoscript | 94 | 8.54 | 11.7% | 1 | 100% |
+| parens-8 v3 | 117 | 10.63 | 9.4% | 1.24 | 80.3% |
+| parens-8 v2 | 137 | 12.45 | 8.0% | 1.46 | 68.6% |
+| parens-8 v1 | 290 | 26.36 | 3.8% | 3.01 | 32.4% |
 
 parens-8 tries to balance speed, memory usage, token cost, and flexibility. improving any one metric usually comes at the cost of another. if you have ideas to improve parens-8, feel free to contribute with a pull request or through the issue tracker.
 
