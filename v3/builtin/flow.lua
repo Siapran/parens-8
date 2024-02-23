@@ -1,15 +1,5 @@
--- if you don't feel like using IIFEs
+-- if you don't feel like writing IIFEs, this writes them for you
 -- (let ((a 42) (b "foo")) (print (.. b a)))
-
--- function builtin:let(exp2, exp3)
--- 	local names, values = {}, {}
--- 	for binding in all(exp2) do
--- 		add(names, binding[1])
--- 		add(values, binding[2])
--- 	end
--- 	return compile({{"fn", names, exp3}, unpack(values)}, self)
--- end
-
 parens8[[
 (rawset builtin "let" (fn (lookup exp2 exp3) (
 	(fn (names values) (select 2
@@ -38,6 +28,7 @@ parens8[[
 -- if you're really strapped for tokens, it will at least save you the headache
 -- of implementing a tail recursion loop correctly yourself.
 
+-- this is what the generated code looks like:
 -- (fn (__ps8_loop) (id
 -- 	(set __ps8_loop (fn () 
 -- 		(when exp2 (__ps8_loop exp3))
@@ -51,6 +42,10 @@ parens8[[
 def_builtin("while", function(frame, a1, a2)
 	while (a1(frame)) a2(frame)
 end)
+
+-- `foreach` should take care of your collection traversal needs, but if for some
+-- reason you think doing numeric loops in parens-8 is a good idea (it usually isn't),
+-- there's a builtin for it.
 
 -- (for (i 1 10 2) (body))
 -- (for ((k v) (pairs foo)) (body))
@@ -92,4 +87,4 @@ function builtin.seq(...)
 		return last(frame)
 	end
 end
--- was it worth it? just use id or select
+-- ...just use `id` or `select -1`, really
