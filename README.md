@@ -53,7 +53,7 @@ it took some work, but parens-8 v3 is pretty close to [picoscript](https://carlc
 
 parens-8 tries to balance speed, memory usage, token cost, and flexibility. improving any one metric usually comes at the cost of another. if you have ideas to improve parens-8, feel free to contribute with a pull request or through the issue tracker.
 
-## builtin extensions
+## extensions
 
 while designed as a lightweight runtime for offloading code to strings and ROM, parens-8 has extensions to turn it into a fully featured programming language.
 
@@ -80,6 +80,15 @@ while designed as a lightweight runtime for offloading code to strings and ROM, 
 extensions can be found in `v*/builtin/`. include the extensions you need, and feel free to comment out builtins you aren't using.
 
 custom builtins may be defined from both lua and parens-8. each version has a different way of defining builtins. study the `def_builtin.lua` file of each version.
+
+the core of parens-8 v3 also comes with optional syntax extensions for:
+* field access: `(set self.x (+ self.x self.dx))`
+* variadics: `(fn (...) (foo ...))`
+because of the way upvalues work in v3, parameter packs can also be captured, something native Lua can't do:
+```lisp
+(set store (fn (...)
+     (fn () ...)))
+```
 
 ## ROM utilities
 
