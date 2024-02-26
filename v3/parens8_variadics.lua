@@ -45,22 +45,22 @@ function compile(exp, lookup)
 	end
 	if (type(exp) == "number") return function() return exp end
 
-	local op = builtin[exp[1]]
-	if (op) return op(lookup, unpack(exp, 2))
+	local op = deli(exp, 1)
+	if (builtin[op]) return builtin[op](lookup, unpack(exp))
 
-	local args = {compile_n(lookup, unpack(exp))}
-	local fun, n = deli(args, 1), #args
-	return n > 0
-		and function(frame)
-			local function apply(i)
-				if (i < n) return args[i](frame), apply(i + 1)
-				return args[i](frame)
-			end
-			return fun(frame)(apply(1))
-		end
-		or function(frame)
-			return fun(frame)()
-		end
+	local function ret(s1, ...)
+		local s2 = ... and ret(...)
+		return s2 and function(frame)
+			return s1(frame), s2(frame)
+		end or s1
+	end
+	local fun, args =
+		compile(op, lookup), ret(compile_n(lookup, unpack(exp)))
+	return args and function(frame)
+		return fun(frame)(args(frame))
+	end or function(frame)
+		return fun(frame)()
+	end
 end
 
 function builtin:quote(exp2) return function() return exp2 end end
