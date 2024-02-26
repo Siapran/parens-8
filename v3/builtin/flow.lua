@@ -9,7 +9,7 @@ parens8[[
 		)))
 		(compile (pack (pack "fn" names exp3) (unpack values)) lookup)
 	))
-	(quote ()) (quote ())
+	(pack) (pack)
 )))
 
 (rawset builtin "loop" (fn (lookup exp2 exp3) (compile
