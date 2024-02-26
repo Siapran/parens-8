@@ -75,16 +75,3 @@ builtin["for"] = function(lookup, exp2, exp3)
 	end
 end
 
--- here's your damn seq
--- returns the last expression
-function builtin.seq(...)
-	local compiled = {compile_n(...)}
-	local last = deli(compiled)
-	return function(frame)
-		for step in all(compiled) do
-			step(frame)
-		end
-		return last(frame)
-	end
-end
--- ...just use `id` or `select -1`, really
