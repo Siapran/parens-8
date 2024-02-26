@@ -105,7 +105,7 @@ function builtin.set(...)
 	local fields, last, compiled, idx, where = parens8[[
 		(fn (lookup exp2 exp3) ((fn (fields) (id
 			fields
-			(deli fields)
+			(when (rawget fields 2) (deli fields))
 			(compile exp3 lookup)
 			(lookup (deli fields 1))
 		)) (split exp2 ".")))
