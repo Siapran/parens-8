@@ -17,13 +17,13 @@ myfunction(42) -- prints 42
 
 -- use the lua multiline string syntax: [[]]
 parens8[[
-(set foo 256)
-(set bar (fn (a b)
-     (when a
-          (print b)
-          (print "a was false or nil")
-     )
-))
+     (set foo 256)
+     (set bar (fn (a b)
+          (when a
+               (print b)
+               (print "a was false or nil")
+          )
+     ))
 ]]
 
 bar(foo, "hello") -- prints "hello"
@@ -165,7 +165,7 @@ Parens-8 v3 offers this pattern as the `loop` builtin for the price of 1 (one) t
 
 there's a [code highlighter](./misc/highlight.lua). I might make a parens-8 code editor in pico-8 with tools for saving to ROM and such? who knows. it's there. you can try it.
 
-## acknowledgements
+## Acknowledgements
 
 * Peter Norvig's [tutorial](https://norvig.com/lispy.html) got me started with parens-8 v0 and v1.
 * [luchak](https://github.com/luchak) helped quite a bit with parens-8 v2, and I borrowed a few tricks from his own pico-8 lisp implementations.
