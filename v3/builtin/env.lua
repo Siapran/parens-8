@@ -1,21 +1,21 @@
 -- local _ENV = self; x = 42
 -- (env self (set x 42))
-function builtin.env(...)
-	local key, mapped, body = parens8[[
-		(fn (exp) ((fn (key lookup exp1 exp2) (id
-			key (compile exp1 lookup)
-			(compile exp2 (fn (name)
-				((fn (idx where) (id
-					idx (when (tonum (tostring idx)) where key)
-				)) (lookup name))
-			))
-		)) (quote ()) (unpack exp)))
-	]]{...}
+parens8[[
+(fn (closure) (rawset builtin "env" (fn (lookup exp1 exp2) ((fn (key)
+	(closure key (compile exp1 lookup)
+		(compile exp2 (fn (name)
+			((fn (idx where) (id
+				idx (when (tonum (tostring idx)) where key)
+			)) (lookup name))
+		)))
+) (pack)))))
+]](function (key, mapped, body)
 	return function(frame)
 		frame[1][key] = mapped(frame)
 		return body(frame)
 	end
-end
+end)
+
 
 -- to save you the trouble of capturing all the globals by hand
 -- (capture_api (env foo (print bar)))
