@@ -1,6 +1,6 @@
-function def_builtin(name, fn)
+-- for builtins that don't alter the compilation of child expressions
+function def_builtin(name, fun)
 	builtin[name] = function(...)
-		local a1, a2 = compile_n(...)
-		return function(frame) return fn(frame, a1, a2) end
+		return fun(compile_n(...))
 	end
 end
