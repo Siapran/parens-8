@@ -48,7 +48,9 @@ Parens-8 comes in three different versions:
 * v1: 337 tokens, substantially slower, uses more memory, same pitfalls as v2.
 
 v1 is an interpreter that evaluates the AST as it runs the code. This makes it the lightest version in terms of token usage.
+
 v2 is substantially faster than v1: it compiles the AST into closures that perform only the required computations. Think of it as a bytecode compiler that compiles to Lua closures instead of a portable binary.
+
 v3 takes the compiler one step further and compiles _scope lookup_ into proper locals, upvalues, and globals, instead of performing scope lookup at runtime.
 
 If you're unsure of which version to pick, use v3. It has the best overall performance and the most features, at the cost of slightly heavier token cost. v3 is the version that most closely reproduces the semantics of Lua.
@@ -144,9 +146,7 @@ As mentionned above, parens-8 v3 offers optional support for variadics with the 
 ```
 All versions of parens-8 support the same behavior as lua for multiple return values. So even without the variadics support, functions like `id`, `select`, `pack` and `unpack` can and should be leveraged to your advantage.
 
-Most lisp flavors have some sort of `progn` builtin for executing sequences of statements, which is equivalent to `(select -1 exp1 exp2 expn)`. in parens-8, the choice was made to use the identity function `function id(...) return ... end` instead. `id` can be used wherever you need to run multiple statements in a single expression, and can also be used whenever you need to return multiple values from a function:
-
-Most Lisp flavors support some sort of `seq` or `progn` builtin for executing sequences of statements. Parens-8 does offer an _optional_ `seq` builtin if you find yourself writing a lot of imperative code, but the identity function `id` and `select` are reasonable substitutes if you would rather save on tokens, though `seq` is significantly faster. `id` is also useful for returning multiple values:
+Most Lisp flavors support some sort of `seq` or `progn` builtin for executing sequences of statements. Parens-8 does offer an _optional_ `seq` builtin if you find yourself writing a lot of imperative code, but the identity function `function id(...) return ... end` and `select` are reasonable substitutes if you would rather save on tokens, though `seq` is significantly faster. `id` is also useful for returning multiple values:
 ```lisp
 (set print_foo_then_print_bar
      (fn () (id (print foo)
