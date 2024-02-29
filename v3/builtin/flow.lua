@@ -39,9 +39,13 @@ parens8[[
 -- if you *really* need proper loops and can justify the token cost however...
 
 -- (while (< x 3) (set x (+ 1 x))
-def_builtin{"while", function(a1, a2) return function(frame)
+parens8[[
+(fn (closure) (rawset builtin "while" (fn (lookup cond body)
+	(closure (compile_n lookup cond body))
+)))
+]](function(a1, a2) return function(frame)
 	while (a1(frame)) a2(frame)
-end end}
+end end)
 
 -- `foreach` should take care of your collection traversal needs, but if for
 -- some reason you think doing numeric loops in parens-8 is a good idea (it
