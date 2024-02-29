@@ -1,5 +1,12 @@
 -- parens-8 v3
--- a lisp interpreter by twomice
+-- a lisp interpreter by three rodents
+
+function parens8(code)
+	_pstr, _ppos = "id " .. code .. ")", 0
+	return compile({parse()}, function(name) return name, 1 end){{_ENV}}
+end
+
+function id(...) return ... end
 
 function consume(matches, inv)
 	local start = _ppos
@@ -23,8 +30,6 @@ function parse(off)
 	return tonum(token) or token, parse(0)
 end
 
-function id(...) return ... end
-
 builtin = {}
 
 function compile_n(lookup, exp, ...)
@@ -35,18 +40,8 @@ function compile(exp, lookup)
 	if type(exp) == "string" then
 		local fields = split(exp, ".")
 		exp = deli(fields, 1)
+		if (fields[1]) return fieldview(lookup, exp, fields)
 		local idx, where = lookup(exp)
-
-		if fields[1] then
-			local function view(tab)
-				for field in all(fields) do tab = tab[field] end
-				return tab
-			end
-			return where
-				and function(frame) return view(frame[1][where][idx]) end
-				or function(frame) return view(frame[idx]) end
-		end
-
 		return where
 			and function(frame) return frame[1][where][idx] end
 			or function(frame) return frame[idx] end
@@ -101,42 +96,43 @@ function builtin:fn(exp2, exp3)
 		end
 end
 
-function builtin.set(...)
-	local fields, last, compiled, idx, where = parens8[[
-		(fn (lookup exp2 exp3) ((fn (fields) (id
-			fields
-			(when (rawget fields 2) (deli fields))
-			(compile exp3 lookup)
-			(lookup (deli fields 1))
-		)) (split exp2 ".")))
-	]](...)
-
-	if last then
-		local function view(tab)
-			for field in all(fields) do tab = tab[field] end
-			return tab
-		end
-		return where
-			and function(frame)
-				view(frame[1][where][idx])[last] = compiled(frame)
-			end
-			or function(frame) view(frame[idx])[last] = compiled(frame) end
-	end
-
-	return where
-		and function(frame) frame[1][where][idx] = compiled(frame) end
-		or function(frame) frame[idx] = compiled(frame) end
-end
-
-function builtin.when(...)
-	local a1, a2, a3 = compile_n(...)
-	return function(frame)
+parens8[[
+(fn (closure) (rawset builtin "when" (fn (lookup e1 e2 e3)
+	(closure (compile_n lookup e1 e2 e3))
+)))
+]](function(a1, a2, a3) return
+	function(frame)
 		if (a1(frame)) return a2(frame)
 		if (a3) return a3(frame)
 	end
-end
+end)
 
-function parens8(code)
-	_pstr, _ppos = "id " .. code .. ")", 0
-	return compile({parse()}, function(name) return name, 1 end){{_ENV}}
-end
+parens8[[
+(fn (closures) (rawset builtin "set" (fn (lookup exp1 exp2)
+	((fn (compiled fields) ((fn (head tail) (when tail
+		(select 3 (closures compiled tail (fieldview lookup head fields)))
+		((fn (idx where) (select (when where 1 2)
+			(closures compiled idx where)
+		)) (lookup head))
+	)) (deli fields 1) (deli fields))) (compile exp2 lookup) (split exp1 "."))
+)))
+]](function(compiled, idx, where) return
+	function(frame) frame[1][where][idx] = compiled(frame) end,
+	function(frame) frame[idx] = compiled(frame) end,
+	function(frame) where(frame)[idx] = compiled(frame) end
+end)
+
+parens8[[
+(fn (closure) (set fieldview (fn (lookup tab fields view) (select -1
+	(set view (fn (step i field) (when field (view
+		(closure step field)
+		(inext fields i)
+	) step)))
+	(view (compile tab lookup) (inext fields))
+))))
+]](function(step, field)
+	return function(frame)
+		return step(frame)[field]
+	end
+end)
+

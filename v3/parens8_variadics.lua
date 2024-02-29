@@ -1,5 +1,12 @@
 -- parens-8 v3
--- a lisp interpreter by twomice
+-- a lisp interpreter by three rodents
+
+function parens8(code)
+	_pstr, _ppos = "id " .. code .. ")", 0
+	return compile({parse()}, function(name) return name, 1 end){{_ENV}}
+end
+
+function id(...) return ... end
 
 function consume(matches, inv)
 	local start = _ppos
@@ -22,8 +29,6 @@ function parse(off)
 	local token = consume' \n\t()\'"'
 	return tonum(token) or token, parse(0)
 end
-
-function id(...) return ... end
 
 builtin = {}
 
@@ -63,15 +68,15 @@ function compile(exp, lookup)
 	end
 end
 
-function builtin:quote(exp2) return function() return exp2 end end
+function builtin:quote(exp1) return function() return exp1 end end
 
-function builtin:fn(exp2, exp3)
+function builtin:fn(exp1, exp2)
 	local locals, captures, key =
 		parens8[[(quote ()) (quote ()) (quote ())]]
-	for i,v in ipairs(exp2) do locals[v] = i end
-	local body = compile(exp3, function(name)
+	for i,v in ipairs(exp1) do locals[v] = i end
+	local body = compile(exp2, function(name)
 		local idx, where = locals[name]
-		if idx then return idx + 1, false end
+		if (idx) return idx + 1, false
 		idx, where = self(name)
 		captures[where] = true
 		return idx, where or key
@@ -93,27 +98,26 @@ function builtin:fn(exp2, exp3)
 		end
 end
 
-function builtin.set(...)
-	local compiled, idx, where = parens8[[
-		(fn (lookup exp2 exp3) (id
-			(compile exp3 lookup)
-			(lookup exp2)
-		))
-	]](...)
-	return where
-		and function(frame) frame[1][where][idx] = compiled(frame) end
-		or function(frame) frame[idx] = compiled(frame) end
-end
-
-function builtin.when(...)
-	local a1, a2, a3 = compile_n(...)
-	return function(frame)
+parens8[[
+(fn (closure) (rawset builtin "when" (fn (lookup e1 e2 e3)
+	(closure (compile_n lookup e1 e2 e3))
+)))
+]](function(a1, a2, a3) return
+	function(frame)
 		if (a1(frame)) return a2(frame)
 		if (a3) return a3(frame)
 	end
-end
+end)
 
-function parens8(code)
-	_pstr, _ppos = "id " .. code .. ")", 0
-	return compile({parse()}, function(name) return name, 1 end){{_ENV}}
-end
+parens8[[
+(fn (closures) (rawset builtin "set" (fn (lookup exp1 exp2)
+	((fn (compiled idx where)
+		(select (when where 1 2)
+			(closures compiled idx where)
+		)
+	) (compile exp2 lookup) (lookup exp1))
+)))
+]](function(compiled, idx, where) return
+	function(frame) frame[1][where][idx] = compiled(frame) end,
+	function(frame) frame[idx] = compiled(frame) end
+end)
