@@ -16,7 +16,6 @@ parens8[[
 	end
 end)
 
-
 -- to save you the trouble of capturing all the globals by hand
 -- (capture_api (env foo (print bar)))
 -- this is more or less what pico-8 does internally at launch

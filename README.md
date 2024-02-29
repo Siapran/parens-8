@@ -99,7 +99,9 @@ While designed as a lightweight runtime for offloading code to strings and ROM, 
 (print (add_all 1 2 3 4 5)) ; 15
 ```
 
-Extensions can be found in `vN/builtin/`. The field and variadics syntax extensions are enabled by including `v3/parens8_field.lua` or `v3/parens8_variadics.lua` instead of `v3/parens8.lua`.
+Extensions can be found in `v*/builtin/`. Parens-8 v3 with all builtin extensions enabled is 941 tokens. The field and variadics syntax extensions are enabled separately by including `v3/parens8_field.lua` or `v3/parens8_variadics.lua` instead of `v3/parens8.lua`.
+
+Remember: it's unlikely you will need all extensions. Pick a few ones you know will be useful for _your_ use case, and make sure you get as much mileage as you can out of them. About half of parens-8 v3 is written _in parens-8_, with only the four core builtins, no extensions.
 
 ## ROM utilities
 
