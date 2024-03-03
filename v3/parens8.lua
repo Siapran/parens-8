@@ -68,7 +68,7 @@ function builtin:quote(exp1) return function() return exp1 end end
 function builtin:fn(exp1, exp2)
 	local locals, captures, key =
 		parens8[[(quote ()) (quote ()) (quote ())]]
-	for i,v in ipairs(exp1) do locals[v] = i end
+	for i,v in inext, exp1 do locals[v] = i end
 	local body = compile(exp2, function(name)
 		local idx, where = locals[name]
 		if (idx) return idx + 1, false
@@ -79,7 +79,7 @@ function builtin:fn(exp1, exp2)
 	return captures[false]
 		and function(frame)
 			local upvals = {[key] = frame}
-			for where in pairs(captures) do
+			for where in next, captures do
 				if (where) upvals[where] = frame[1][where]
 			end
 			return function(...)
