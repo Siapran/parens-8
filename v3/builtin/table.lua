@@ -10,7 +10,7 @@ function builtin.table(...)
 					step (compile (rawget elem 2) lookup) (rawget elem 1)))
 				(select 2 (closures step (compile elem lookup)))
 			)) (construct (inext exp i)))
-			(fn (res) res)
+			id
 		)))
 		(select 3 (closures (construct (inext exp))))
 	)) (deli exp 1) (deli exp 1)))
@@ -24,7 +24,7 @@ function builtin.table(...)
 			return step(res, frame)
 		end,
 		function(frame)
-			return step({}, frame)
+			return (step({}, frame))
 		end
 	end, ...}
 end
