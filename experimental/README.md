@@ -20,6 +20,7 @@ instead of piggybacking the lua stack with activation frames, do our own stack m
 pros:
 - no upvalue lifetime issues from v3
 - potentially faster for complex expressions (nullary calls instead of unary calls)
+
 cons:
 - no tail call elimination (bad, can't do recursion loops anymore)
 - function overhead is slower
