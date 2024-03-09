@@ -80,7 +80,7 @@ Running the `fun` implementations for each language gives the following.
 | parens-8 v2 | 193 | 6.6 | 15% |
 | parens-8 v1 | 330 | 11.3 | 8.7% |
 
-For more details, see [this document](./doc/performance.md)
+For more details, see [this document](./doc/performance.md).
 
 ## Extensions
 
