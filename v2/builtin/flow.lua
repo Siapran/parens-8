@@ -3,7 +3,7 @@
 function builtin:let(_, a2)
 	local bound = {}
 	for binding in all(self[2]) do
-		bound[binding[1]] = eval(binding[2])
+		bound[binding[1]] = compile(binding[2])
 	end
 	return function(env)
 		local runbound = {}
@@ -20,7 +20,7 @@ end)
 
 -- (for ((k v) (pairs foo)) (body))
 builtin["for"] = function(exp, _, a2)
-	local iter = eval(exp[2][2])
+	local iter = compile(exp[2][2])
 	return function(env)
 		local next, state, prev = iter(env)
 		repeat

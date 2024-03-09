@@ -4,17 +4,44 @@ __lua__
 -- baloon bomber
 -- a sidescroller in parens-8
 
-#include ../compiler/parens8.lua
-#include ../compiler/builtin/operators.lua
-#include ../compiler/builtin/env.lua
-#include ../compiler/builtin/flow.lua
+#include ../v3/parens8_field.lua
+#include ../v3/builtin/operators.lua
+#include ../v3/builtin/flow.lua
+#include ../v3/builtin/env.lua
+#include ../v3/builtin/table.lua
+#include ../v3/builtin/seq.lua
 
 parens8[[
+(set explosion_colors (table 0 7 10 9 2 1))
 (set gravity .4)
-(set plane (pack))
+
+(set plane (table))
+(set bombs (table))
+(set t 0)
+(set score 0)
+(set speed 2)
+(set particles (table))
+
+(set distance2 (fn (a b) (+
+	(^ (- a.x b.x) 2)
+	(^ (- a.y b.y) 2))))
+
+(set collides (fn (a b)
+	(and (and (< a.x (+ b.x b.width))
+	          (< b.x (+ a.x a.width)))
+	     (and (< a.y (+ b.y b.height))
+	          (< b.y (+ a.y a.height))))))
+
+(set make_smoke 1)
+(set make_explosion 1)
+(set make_spark_cluster 1)
+(set make_pop 1)
+]]
+
+parens8[[(capture_api (id
 
 (set update_particles (fn ()
-	(foreach particles (fn (particle) (env particle (id
+	(foreach particles (fn (particle) (env particle (seq
 		(update particle)
 		(set ttl (- ttl 1))
 		(when (< ttl 0) (del particles particle))
@@ -22,73 +49,71 @@ parens8[[
 		          (~= y (mid y -8 135)))
 			(del particles particle))))))))
 
-(set draw_particles (fn () (id
-	(set particles_fg (pack))
-	(foreach particles (fn (particle) (id
-		(when (not ([] particle "fg"))
-			(([] particle "draw") particle)
-			(add particles_fg particle))))))))
+(set draw_particles (fn () (seq
+	(set particles_fg (table))
+	(foreach particles (fn (particle)
+		(when (not particle.fg)
+			(particle.draw particle)
+			(add particles_fg particle)))))))
 
 (set draw_particles_fg (fn ()
 	(for ((particle) (all particles_fg))
-		(([] particle "draw") particle))))
+		(particle.draw particle))))
 
-(set make_smoke (fn (x y) (add particles (zip
-	(split "x,y,r,ttl,update,draw") (pack
-		x y 2 0x7fff
-		(fn (self) (env self (id
-		    (set x (- (+ x (- (rnd 2) 1)) speed))
-		    (set y (- (+ y (- (rnd 2) 1)) .5))
-		    (set r (+ r .25)))))
-		(fn (self) (env self (circfill x y r 0))))))))
+(set make_smoke (fn (arg_x arg_y) (add particles (table
+	(x arg_x) (y arg_y) (r 2) (ttl 0x7fff)
+	(update (fn (self) (env self (seq
+		(set x (- (+ x (- (rnd 2) 1)) speed))
+		(set y (- (+ y (- (rnd 2) 1)) .5))
+		(set r (+ r .25))))))
+	(draw (fn (self) (env self (circfill x y r 0))))
+))))
 
-(set explosion_colors (pack 0 7 10 9 2 1))
-(set make_explosion (fn (x y r) (add particles (zip
-	(split "x,y,r,ttl,fg,update,draw") (pack
-		x y r 10 1
-		(fn (self) (env self (when (< ttl 5) (id
-		    (set x (- x speed))
-		    (make_smoke (- (+ x (rnd r)) (/ r 2))
-		                (- (+ y (rnd r)) (/ r 2)))))))
-		(fn (self) (env self
-		    (circfill
-		        x y
-		        (* r (min (/ ttl 8) 1))
-		        (or ([] explosion_colors (- 11 ttl)) 0)))))))))
+(set make_explosion (fn (arg_x arg_y arg_r) (add particles (table
+		(x arg_x) (y arg_y) (r arg_r) (ttl 10) (fg 1)
+		(update (fn (self) (env self (when (< ttl 5) (seq
+			(set x (- x speed))
+			(make_smoke (- (+ x (rnd r)) (/ r 2))
+			            (- (+ y (rnd r)) (/ r 2))))))))
+		(draw (fn (self) (env self
+			(circfill
+			    x y
+			    (* r (min (/ ttl 8) 1))
+			    (or ([] explosion_colors (- 11 ttl)) 0)))))))))
 
-(set make_pop (fn (x y) (add particles (zip
-	(split "x,y,ttl,fg,update,draw") (pack
-		x y 3 1
-		(fn () (id))
-		(fn (self) (env self (spr 10 x y))))))))
+(set make_pop (fn (x y) (add particles (table
+		(x x) (y y) (ttl 3) (fg 1)
+		(update (fn () (quote)))
+		(draw (fn (self) (spr 10 self.x self.y)))))))
 
-(set make_spark_cluster (fn (x y amount spread) (add particles (zip
-	(split "x,y,ttl,fg,sparks,update,draw") (pack
-		x y 15 1
-		(let ((res (pack))) (select -1
-			(while (> amount 0) (id
+(set make_spark_cluster (fn (arg_x arg_y amount spread) (add particles (table
+		(x arg_x) (y arg_y) (ttl 15) (fg 1)
+		(sparks (let ((res (table))) (seq
+			(while (> amount 0) (seq
 			    (set amount (- amount 1))
-			    (add res (zip (split "x,y,vx,vy") (pack
-			        x y (- (rnd (* 2 spread)) spread) (* -2 (rnd spread)))))))
-			res))
-		(fn (self) (foreach ([] self "sparks") (fn (spark) (env spark (id
+			    (add res (table
+			        (x arg_x) (y arg_y)
+					(vx (- (rnd (* 2 spread)) spread))
+					(vy (* -2 (rnd spread)))))))
+			res)))
+		(update (fn (self) (foreach self.sparks (fn (spark) (env spark (seq
 		    (set vy (* .95 (+ vy gravity)))
 		    (set vx (* .95 vx))
-		    (set x (+ vx (- x (* speed (min (/ 8 ([] self "ttl")) 1)))))
-		    (set y (+ vy y)))))))
-		(fn (self) (foreach ([] self "sparks") (fn (spark)
-		    (pset ([] spark "x") ([] spark "y") 10)))))))))
+		    (set x (+ vx (- x (* speed (min (/ 8 self.ttl) 1)))))
+		    (set y (+ vy y))))))))
+		(draw (fn (self) (foreach self.sparks (fn (spark)
+		    (pset spark.x spark.y 10)))))))))
 
-([] plane "draw" (fn (self) (env self (spr
+(set plane.draw (fn (self) (env self (spr
 	(when (> lives 0)
 		(when (> vy 1) 2 (when (< vy -1) 4 0))
 		(let ((osc (sin (/ t 60))))
 			(when (> osc .66) 2 (when (< osc -.66) 4 0))))
 	x (- y 4) 2 2))))
 
-([] plane "update" (fn (self) (env self (id
+(set plane.update (fn (self) (env self (seq
 	(when (> lives 0)
-		(id 
+		(seq
 			(set vx (+ vx (when (btn 0) -1 (when (btn 1) 1 0))))
 			(set vy (+ vy (when (btn 2) -1 (when (btn 3) 1 0)))))
 		(set vy 1))
@@ -100,7 +125,7 @@ parens8[[
 	(set y (+ y vy))
 	(when (> lives 0)
 		(let ((clx (mid x 0 (- 127 width)))
-		      (cly (mid y 0 (- 127 height)))) (id
+		      (cly (mid y 0 (- 127 height)))) (seq
 			(when (~= clx x) (set vx 0))
 			(when (~= cly y) (set vy 0))
 			(set x clx)
@@ -108,8 +133,8 @@ parens8[[
 
 	(when (btnp 4) (set lives (% (- lives 1) 4)))
 
-	(when (< lives 2) (id
-		(let ((i 0)) (while (< i speed) (id
+	(when (< lives 2) (seq
+		(let ((i 0)) (while (< i speed) (seq
 			(make_smoke (- (+ x 8) (/ (* i (+ vx speed)) speed))
 			            (- (+ y 4) (/ (* i vy) speed)))
 			(set i (+ i 1.5)))))
@@ -117,33 +142,33 @@ parens8[[
 			(make_explosion (+ x (rnd 16)) (+ y (rnd 8)) (+ 2 (rnd 4))))))
 	))))
 
-(set for_outline (fn (f) (id
+(set for_outline (fn (f) (seq
 	(f -1 -1) (f 0 -1) (f 1 -1)
-	(f -1 0)   "YCH"   (f 1 0)
+	(f -1 0)           (f 1 0)
 	(f -1 1)  (f 0 1)  (f 1 1))))
 
-(set print_outlined (fn (s x y col ol) (id
+(set print_outlined (fn (s x y col ol) (seq
 	(for_outline (fn (ox oy) (print s (+ x ox) (+ y oy) ol)))
-	(print s x y col)
-	)))
+	(print s x y col))))
 
-(set display_hud (fn () (id
+(set display_hud (fn () (seq
 	(print_outlined t 2 2 7 4)
-	(print_outlined speed 2 121 7 4)
 	(let ((str (tostring (# particles))))
 		(print_outlined str (- 127 (* 4 (# str))) 121 7 4))
-	(let ((i 0)) (while (< i 3) (id
-		(spr (when (< i lives) 14 15) (+ 104 (* i 8)) 1)
-		(set i (+ i 1))))))))
+	(let ((i 0)) (while (< i 3) (seq
+		(spr (when (< i plane.lives) 14 15) (+ 104 (* i 8)) 1)
+		(set i (+ i 1)))))
+	(print_outlined (stat 1) 2 121 7 4)
+	(print_outlined (stat 0) 2 113 7 4)
+)))
 
-(set clouds_bg (pack))
-(set clouds_fg (pack))
+(set clouds_bg (table))
+(set clouds_fg (table))
 
-(set make_cloud (fn (x y r) (zip
-	(split "x,y,r")
-	(pack (* x 8) (+ y (rnd 8)) (+ r (rnd 8))))))
+(set make_cloud (fn (x y r) (table
+	(x (* x 8)) (y (+ y (rnd 8))) (r (+ r (rnd 8))))))
 
-(set init_clouds (fn () (let ((i 0)) (while (< i 18) (id
+(set init_clouds (fn () (let ((i 0)) (while (< i 18) (seq
 	(add clouds_bg (make_cloud i 0 6))
 	(add clouds_bg (make_cloud i 120 6))
 	(add clouds_fg (make_cloud i -4 4))
@@ -151,91 +176,78 @@ parens8[[
 	(set i (+ i 1)))))))
 
 (set update_clouds (fn (clouds topy boty rad spd)
-                       (foreach clouds (fn (cloud) (env cloud (id
+                       (foreach clouds (fn (cloud) (env cloud (seq
 	(set x (- x spd))
-	(when (< x -7) (id
+	(when (< x -7) (seq
 		(set x (+ spd (% x 144)))
 		(set y (+ (rnd 8) (when (< y 64) topy boty)))
 		(set r (+ rad (rnd 8)))))))))))
 
-(set draw_sky (fn () (id
+(set draw_sky (fn () (seq
 	(foreach clouds_bg (fn (cloud) (env cloud
 		(circfill x y r 15))))
 	(foreach clouds_fg (fn (cloud) (env cloud
 		(circfill x y r 7)))))))
 
-(set collides (fn (a b) (env a
-	(and (and (< x (env b (+ x width)))
-	          (< ([] b "x") (+ x width)))
-	     (and (< y (env b (+ y height)))
-	          (< ([] b "y") (+ y height)))))))
+(set make_bomb (fn (arg_x arg_y) (add bombs (table
+	(x arg_x) (y arg_y) (width 6) (height 6) (baloon 1) (blink 0)
+	(update (fn (self) (env self (let ((inrange (< (distance2 self plane) 512))) (seq
+				(when (or (< x -8) (> y 136)) (del bombs self))
+				(set x (- x speed))
+				(when (not baloon)
+					(seq (set vy (* .9 (+ vy gravity)))
+					     (set y (+ y vy)))
+					(when (and inrange
+					           (collides plane (table
+					                (x x) (y (- y 10)) (width 8) (height 8))))
+					      (seq (make_pop (- x 1) (- y 10))
+					           (set baloon (quote))
+					           (set vy 0))))
+				(when (and inrange (collides self plane))
+					(seq (make_explosion (+ x 3) (+ y 3) 8)
+					     (make_spark_cluster (+ x 3) (+ y 3) 8 2)
+					     (set plane.lives (- plane.lives 1))
+					     (del bombs self))
+					(set blink (when inrange (+ blink 0.2) .5))))))))
+	(draw (fn (self) (env self (let ((sprnum (when (> (sin blink) .7) 24 8))) (seq
+				(when self.baloon (spr 26 (- x 1) (- y 10))
+				                  (set sprnum (+ sprnum 1)))
+				(spr sprnum (- x 1) (- y 2)))))))))))
 
-(set distance2 (fn (a b) (env a (+
-	(^ (- x ([] b "x")) 2)
-	(^ (- y ([] b "y")) 2)))))
-
-(set bombs (pack))
-
-(set make_bomb (fn (x y) (add bombs (zip
-	(split "x,y,width,height,baloon,blink,update,draw")
-	(pack x y 6 6 1 0
-		(fn (self) (env self (let ((inrange (< (distance2 self plane) 512))) (id
-			(when (or (< x -8) (> y 136)) (del bombs self))
-			(set x (- x speed))
-			(when (not ([] self "baloon"))
-				(id (set vy (* .9 (+ vy gravity)))
-				    (set y (+ y vy)))
-				(when (and inrange
-				           (collides plane (zip (split "x,y,width,height")
-				                                (pack x (- y 10) 8 8))))
-				      (id (make_pop (- x 1) (- y 10))
-				          (set baloon (quote))
-				          (set vy 0))))
-			(when (and inrange (collides self plane))
-				(id (make_explosion (+ x 3) (+ y 3) 8)
-				    (make_spark_cluster (+ x 3) (+ y 3) 8 2)
-				    (set lives (- lives 1))
-				    (del bombs self))
-				(set blink (when inrange (+ blink 0.2) .5)))))))
-		(fn (self) (env self (let ((sprnum (when (> (sin blink) .7) 24 8))) (id
-			(when ([] self "baloon") (spr 26 (- x 1) (- y 10))
-			                         (set sprnum (+ sprnum 1)))
-			(spr sprnum (- x 1) (- y 2)))))))))))
-
-(set _init (fn () (id
-	([] plane "x" 56)
-	([] plane "y" 60)
-	([] plane "vx" 0)
-	([] plane "vy" 0)
-	([] plane "width" 16)
-	([] plane "height" 8)
+(set _init (fn () (seq
+	(set plane.x 56)
+	(set plane.y 60)
+	(set plane.vx 0)
+	(set plane.vy 0)
+	(set plane.width 16)
+	(set plane.height 8)
+	(set plane.lives 2)
 	(set t 0)
 	(set score 0)
 	(set speed 2)
-	(set lives 2)
-	(set particles (pack))
-	(set bombs (pack))
+	(set particles (table))
+	(set bombs (table))
 	(init_clouds))))
 
-(set _update (fn () (id
+(set _update (fn () (seq
 	(when (== 0 (% t (flr (/ 30 speed)))) (make_bomb 130 (rnd 122)))
 	(set speed (+ speed .001))
 	(update_clouds clouds_bg 0 120 6 (* speed .5))
 	(update_clouds clouds_fg -4 124 4 (* speed .75))
 	(update_particles)
-	(([] plane "update") plane)
-	(foreach bombs (fn (bomb) (([] bomb "update") bomb)))
+	(plane.update plane)
+	(foreach bombs (fn (bomb) (bomb.update bomb)))
 	(set t (+ t 1)))))
 
-(set _draw (fn () (id
+(set _draw (fn () (seq
 	(cls 12)
 	(draw_sky)
 	(draw_particles)
-	(foreach bombs (fn (bomb) (([] bomb "draw") bomb)))
-	(([] plane "draw") plane)
+	(foreach bombs (fn (bomb) (bomb.draw bomb)))
+	(plane.draw plane)
 	(draw_particles_fg)
 	(display_hud))))
-]]
+))]]
 
 __gfx__
 00000000000000000000000000000000000000000000000000000000000000000040040000000000000000000000000000000000000000000990990009909900

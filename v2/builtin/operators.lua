@@ -1,9 +1,3 @@
-function def_builtin(name, fn)
-	builtin[name] = function(exp, a1, a2)
-		return function(env) return fn(env, a1, a2) end
-	end
-end
-
 def_builtin("neg", function(env, a1) return -a1(env) end)
 def_builtin("+", function(env, a1, a2) return a1(env)+a2(env) end)
 def_builtin("-", function(env, a1, a2) return a1(env)-a2(env) end)

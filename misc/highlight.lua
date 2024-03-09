@@ -1,34 +1,30 @@
-function parencol(i)
-	local colors = "9ade"
-	return "\f" .. colors[i % #colors + 1]
-end
-
-function highlight(str, depth)
-	depth = depth or 0
-	local res = ""
-	while #str > 0 do
-		local strip, c = find(str, function(x)
-				return not any' \n\t'(x)
-			end)
-		res ..= sub(str, 1, strip - 1)
-		str = sub(str, strip)
-		if c == '(' then
-			local nested, rest = highlight(sub(str, 2), depth + 1)
-			res ..= parencol(depth) .. c .. nested
-			str = rest
-		elseif c == ')' then
-			if (depth == 0) return res, str
-			return res .. parencol(depth - 1) .. c, sub(str, 2)
-		elseif any'\'"'(c) then
-			local close = find(sub(str, 2), any(c))
-			res ..= "\fb" .. sub(str, 1, close + 1)
-			str = sub(str, close + 2)
-		else
-			local close = find(str, any' \n\t()"\'')
-			local token = sub(str, 1, close - 1)
-			res ..= (tonum(token) and "\fc" or "\f7") .. token
-			str = sub(str, close)
-		end
+function highlight(str)
+	local function parencol(i)
+		local colors = "9ade"
+		return "\f" .. colors[i % #colors + 1]
 	end
-	return res, str
+
+	local function highlight_(acc, depth, off)
+		_ppos += off or 1
+		acc ..= consume(' \n\t', true)
+		local c = _pstr[_ppos]
+		if not c then return acc
+		-- elseif c == ';' then  -- comments support
+		-- 	return highlight_(acc .. "\f5" .. consume'\n', depth, 0)
+		elseif c == '(' then
+			return highlight_(highlight_(acc .. parencol(depth) .. c, depth + 1), depth)
+		elseif c == ')' then
+			if (depth == 0) return acc, sub(_pstr, _ppos)
+			return acc .. parencol(depth - 1) .. c
+		elseif c == '"' or c == "'" then
+			_ppos += 1
+			return highlight_(acc .. "\fb" .. c .. consume(c) .. c, depth)
+		end
+		local token = consume' \n\t()\'"'
+		return highlight_(
+			acc .. (tonum(token) and "\fc" or "\f7") .. token, depth, 0)
+	end
+
+	_pstr, _ppos = str, 0
+	return highlight_("", 0)
 end
