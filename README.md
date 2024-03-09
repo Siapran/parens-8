@@ -140,6 +140,19 @@ This [pico-8 cart](https://www.lexaloffle.com/bbs/?tid=54486) loads its _entire_
 
 Troubleshooting errors is somewhat challenging, as the language itself makes no attempt at diagnostics. Debugging compiled parens-8 (v2 and v3) is slightly easier, as you can at least tell if something is a syntax error or a runtime error.
 
+You can add _some_ debugging facilities by adding assertions in the call code of parens-8:
+```lua
+-- in parens-8 v3, line 59:
+return args and function(frame)
+     assert(fun(frame), op .. " was nil")
+     return fun(frame)(args(frame))
+end or function(frame)
+     assert(fun(frame), op .. " was nil")
+     return fun(frame)()
+end
+```
+Just remember to revert those changes when you're done debugging.
+
 `'` and `"` can't be escaped in parens-8 strings, but you can use either as quotes:
 ```lisp
 (print "hello, here's a single quote")
