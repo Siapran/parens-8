@@ -57,7 +57,30 @@ If you're unsure of which version to pick, use v3. It has the best overall perfo
 
 ## Performance
 
-todo
+For the following lua and parens-8 snippets:
+```lua
+function fun(cond, a, b, c)
+     if cond then
+          return pack(a, b, c)
+     end
+end
+```
+```lisp
+(set fun (fn (cond a b c)
+     (when cond (pack a b c))
+))
+```
+
+Running the `fun` implementations for each language gives the following.
+
+| language | cycles | cycles / native | native / cycles |
+| --- | --- | --- | --- |
+| native lua | 29 | 1 | 100% |
+| parens-8 v3 | 116 | 4.0 | 25% |
+| parens-8 v2 | 193 | 6.6 | 15% |
+| parens-8 v1 | 330 | 11.3 | 8.7% |
+
+For more details, see [this document](./doc/performance.md)
 
 ## Extensions
 
