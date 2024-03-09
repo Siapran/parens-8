@@ -4,9 +4,9 @@ A tiny Lisp for your pico-8 carts
 
 ## Overview
 
-Parens-8 is a tool for bypassing the pico-8 token limit. It takes up 5% of the allowed 8192 tokens, and gives you practically infinite code space in return: store extra code in strings or cart ROM, load it during init, run it like regular lua code.
+Parens-8 is a tool for bypassing the pico-8 token limit. It takes up 5% of the allowed 8192 tokens, and gives you practically infinite code space in return: store extra code in strings or cart ROM, load it during init, run it like regular Lua code.
 
-Parens-8 is designed for maximum interoperability with Lua. Functions, tables, values and coroutines can be passed and used seamlessly between lua and parens-8. Think of parens-8 as Lua semantics with Lisp syntax.
+Parens-8 is designed for maximum interoperability with Lua. Functions, tables, values and coroutines can be passed and used seamlessly between Lua and parens-8. Think of parens-8 as Lua semantics with Lisp syntax.
 
 ```lua
 local a, b, c = parens8("1 2 3")
@@ -36,9 +36,9 @@ Parens-8 comes with four base builtins:
 * `(when cond a b)`, for conditionals, aka `(function() if cond then return a else return b end end)()` (think of it as a Lua `cond and a or b` ternary that supports multiple return values)
 * `(quote expr)`, for preventing an expression from being evaluated.
 
-Note that `"foo"` is translated into `(quote foo)` by the parser. You can also create lua arrays and `nil` this way: `(quote (1 2 3))`, `(quote)`
+Note that `"foo"` is translated into `(quote foo)` by the parser. You can also create Lua arrays and `nil` this way: `(quote (1 2 3))`, `(quote)`
 
-While it's possible to write [an entire game](./examples/baloonbomber_v3.p8) in parens-8, it's best to keep most of your code as plain lua. Use parens-8 for code that you know is stable, and where performance isn't critical. We'll elaborate on performance and use cases further ahead.
+While it's possible to write [an entire game](./examples/baloonbomber_v3.p8) in parens-8, it's best to keep most of your code as plain Lua. Use parens-8 for code that you know is stable, and where performance isn't critical. We'll elaborate on performance and use cases further ahead.
 
 ## Parens-8 versions
 
@@ -57,7 +57,7 @@ If you're unsure of which version to pick, use v3. It has the best overall perfo
 
 ## Performance
 
-For the following lua and parens-8 snippets:
+For the following Lua and parens-8 snippets:
 ```lua
 function fun(cond, a, b, c)
      if cond then
@@ -163,13 +163,13 @@ This pitfall is _extremely_ easy to run into accidentally, and can be hard to tr
 
 ## Misc
 
-As mentionned above, parens-8 v3 offers optional support for variadics with the `...` syntax. Because of the way upvalues work in v3, parameter packs can also be captured, something native Lua can't do!
+As mentioned above, parens-8 v3 offers optional support for variadics with the `...` syntax. Because of the way upvalues work in v3, parameter packs can also be captured, something native Lua can't do!
 ```lisp
 (set store (fn (...)
      (fn () ...)
 ))
 ```
-All versions of parens-8 support the same behavior as lua for multiple return values. So even without the variadics support, functions like `id`, `select`, `pack` and `unpack` can and should be leveraged to your advantage.
+All versions of parens-8 support the same behavior as Lua for multiple return values. So even without the variadics support, functions like `id`, `select`, `pack` and `unpack` can and should be leveraged to your advantage.
 
 Most Lisp flavors support some sort of `seq` or `progn` builtin for executing sequences of statements. Parens-8 does offer an _optional_ `seq` builtin if you find yourself writing a lot of imperative code, but the identity function `function id(...) return ... end` and `select` are reasonable substitutes if you would rather save on tokens, though `seq` is significantly faster. `id` is also useful for returning multiple values:
 ```lisp
@@ -179,7 +179,7 @@ Most Lisp flavors support some sort of `seq` or `progn` builtin for executing se
 (set swap (fn (a b) (id b a)))
 ```
 
-Parens-8, like Lua, supports tail call elimination. This can be leveraged if you plan on foregoing flow extensions:
+Parens-8, like Lua, supports tail call elimination. This can be leveraged if you plan on foregoing [flow extensions](./v3/builtin/flow.lua):
 ```lisp
 (set loop (fn (i) (loop (+ i 1)
      (print (.. (stat 0) (.. " " i)))
@@ -188,12 +188,12 @@ Parens-8, like Lua, supports tail call elimination. This can be leveraged if you
 ```
 Parens-8 v3 offers this pattern as the `loop` builtin for the price of 1 (one) token. It's the poor man's while loop.
 
-there's a [code highlighter](./misc/highlight.lua). I might make a parens-8 code editor in pico-8 with tools for saving to ROM and such? who knows. it's there. you can try it.
+There's a [code highlighter](./misc/highlight.lua). I might make a parens-8 code editor in pico-8 with tools for saving to ROM and such? who knows. It's there. you can try it.
 
 ## Acknowledgements
 
 * Peter Norvig's [tutorial](https://norvig.com/lispy.html) got me started with parens-8 v0 and v1.
-* [luchak](https://github.com/luchak) helped quite a bit with parens-8 v2, and I borrowed a few tricks from his own pico-8 lisp implementations.
+* [luchak](https://github.com/luchak) helped quite a bit with parens-8 v2, and I borrowed a few tricks from his own pico-8 Lisp implementations.
 * Robert Nystrom's book: Crafting Interpreters. Specifically, the [chapter on closures](https://craftinginterpreters.com/closures.html#upvalues) was of great help when designing parens-8 v3.
 * [carlc27843](https://carlc27843.github.io/), for the tantalizing [blog post](https://carlc27843.github.io/post/picoscript/) that inspired me to implement my own extension language.
 * [Wuff](https://wuffmakesgames.itch.io/), for playing around with parens-8 v0 and putting up with my shenanigans.

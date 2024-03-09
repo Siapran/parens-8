@@ -26,6 +26,7 @@ function(a1, a2, a3) return
 	function(f) return a1(f) or a2(f) end,
 	function(f) return a1(f) and a2(f) end,
 	function(f) return not a1(f) end,
+	function(f) return #a1(f) end,
 	a3 and function(f) a1(f)[a2(f)] = a3(f) end
 		or function(f) return a1(f)[a2(f)] end
 end)
