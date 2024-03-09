@@ -43,7 +43,7 @@ While it's possible to write [an entire game](./examples/baloonbomber_v3.p8) in 
 ## Parens-8 versions
 
 Parens-8 comes in three different versions:
-* v3: 507 tokens, the fastest, safest and most memory efficient version.
+* v3: 495 tokens, the fastest, safest and most memory efficient version.
 * v2: 375 tokens, pretty fast, reasonably memory efficient, with a couple pitfalls.
 * v1: 337 tokens, substantially slower, uses more memory, same pitfalls as v2.
 
