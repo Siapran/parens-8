@@ -134,6 +134,20 @@ If (when) you run out of chars in your cart's code, you can store more code in t
 * `parens8(readrom(address, length, filename))` runs your code from where you stored it in ROM.
 * `parens8[[(parens8 (readrom address length filename))]]` does the same as above with less tokens!
 
+The function `write_many` takes care of all of the above, with _multiple_ parens-8 snippets to be saved to ROM, and copies the load/run lua code into your system clipboard:
+```lua
+write_many(0x0, "game_logic.p8",
+[[(print "hello, I'm a piece of code.")]],
+[[(print "hello, I'm *another* piece of code.")]])
+````
+Running the above code will place the following in your clipboard:
+```lua
+parens8[[
+(parens8 (readrom 0x0000 36 "game_logic.p8"))
+(parens8 (readrom 0x0024 44 "game_logic.p8"))
+]]
+```
+
 This [pico-8 cart](https://www.lexaloffle.com/bbs/?tid=54486) loads its _entire_ game logic with `readrom`.
 
 ## Limitations
