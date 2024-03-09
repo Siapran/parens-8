@@ -42,5 +42,5 @@ closure creation:
 - 8 cycles per extra scope
 
 captures are performed eagerly:
-- (fn (a) (fn () (fn () a))) captures are performed when the `(fn () (fn () a))` expression is evaluated, not when `(fn () a)` is evaluated. `(fn () a)` reuses the same captures as `(fn () (fn () a))`
+- `(fn (a) (fn () (fn () a)))` captures are performed when the `(fn () (fn () a))` expression is evaluated, not when `(fn () a)` is evaluated. `(fn () a)` reuses the same captures as `(fn () (fn () a))`
 - when a closure _does_ capture a new scope, it rebuilds a flat upvalue table from the parent upvalue tables and the parent frame
