@@ -10,6 +10,7 @@ instead of passing upvalues _with_ the frame, pass it to the child expression tr
 pros:
 - no upvalue lifetime issues from v3
 - marginally faster function overhead
+
 cons:
 - _much_ slower closure instantiation (problematic with `let`, `for`, `env`, etc)
 - a lot more tokens
