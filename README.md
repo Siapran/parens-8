@@ -148,7 +148,7 @@ parens8[[
 ]]
 ```
 
-This [pico-8 cart](https://www.lexaloffle.com/bbs/?tid=54486) loads its _entire_ game logic with `readrom`.
+This [pico-8 cart](https://www.lexaloffle.com/bbs/?tid=140578) loads its _entire_ game logic with `readrom`.
 
 ## Limitations
 
