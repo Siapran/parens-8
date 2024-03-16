@@ -1,12 +1,12 @@
 parens8[[
-(fn (opstr closures) ((fn (ops loop) (select -1
-	(set loop (fn (i op) (when i (loop (select 2
+(fn (opstr closures) ((fn (ops loopfn) (select -1
+	(set loopfn (fn (i op) (when i (loopfn (select 2
 		(rawset builtin op (fn (lookup e1 e2 e3)
 			(select i (closures (compile_n lookup e1 e2 e3)))
 		))
 		(inext ops i)
 	)))))
-	(loop (inext ops))
+	(loopfn (inext ops))
 )) (split opstr)))
 ]]("+,-,*,/,\\,%,^,<,>,==,~=,..,or,and,not,#,[]",
 function(a1, a2, a3) return
