@@ -38,9 +38,14 @@ end
 
 function compile(exp, lookup)
 	if type(exp) == "string" then
-		local fields = split(exp, ".")
-		if (fields[2]) return fieldview(lookup, deli(fields, 1), fields)
+		local fields, variadic = split(exp, "."), exp == "..."
+		if (fields[2] and not variadic) return fieldview(lookup, deli(fields, 1), fields)
 		local idx, where = lookup(exp)
+		if variadic then
+			return where
+				and function(frame) return unpack(frame[1][where], idx) end
+				or function(frame) return unpack(frame, idx) end
+		end
 		return where
 			and function(frame) return frame[1][where][idx] end
 			or function(frame) return frame[idx] end
