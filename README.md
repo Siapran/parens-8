@@ -134,21 +134,26 @@ If (when) you run out of chars in your cart's code, you can store more code in t
 * `parens8(readrom(address, length, filename))` runs your code from where you stored it in ROM.
 * `parens8[[(parens8 (readrom address length filename))]]` does the same as above with less tokens!
 
-The function `write_many` takes care of all of the above, with _multiple_ parens-8 snippets to be saved to ROM, and copies the load/run lua code into your system clipboard:
+The function `write_module` takes care of all of the above, with _multiple_ parens-8 snippets to be saved to ROM, and copies the load/run lua code into a .p8l file:
 ```lua
-write_many(0x0, "game_logic.p8",
+write_module("game_logic.p8l", 0x0, "game_logic.p8",
 [[(print "hello, I'm a piece of code.")]],
 [[(print "hello, I'm *another* piece of code.")]])
 ````
-Running the above code will place the following in your clipboard:
+Running the above code will create the file `game_logic.p8l` with these contents:
 ```lua
 parens8[[
-(parens8 (readrom 0x0000 36 "game_logic.p8"))
-(parens8 (readrom 0x0024 44 "game_logic.p8"))
+(parens8 (readrom 0x0000 0x0024 "game_logic.p8"))
+(parens8 (readrom 0x0024 0x002c "game_logic.p8"))
 ]]
 ```
+The workflow for writing parens-8 code when you don't have enough chars left in your main cart becomes:
+* create a `build.p8` cart with your parens-8 code in a `write_module` call
+* include `readrom.lua` and your .p8l module in your main cart
+* run two instances of pico-8: one with `build.p8` loaded, the other with your game
+* to reload your game after updating the parens-8 code: press ctrl-R on the build window, then ctrl-R on the game window.
 
-This [pico-8 cart](https://www.lexaloffle.com/bbs/?tid=140578) loads its _entire_ game logic with `readrom`.
+For an example of this in action, check [this pico-8 cart](https://www.lexaloffle.com/bbs/?tid=140578).
 
 ## Limitations
 
