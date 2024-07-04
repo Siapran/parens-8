@@ -73,12 +73,12 @@ parens8[[
 		end
 	end,
 	function(frame) -- generic for loop (41 tokens)
-		local body, next, state, prev, vars = cbody(frame), a(frame)
-		repeat
-			vars = {next(state, prev)}
-			prev = vars[1]
-			if (prev == nil) return
-			body(unpack(vars))
-		until false
+		local body, next, state = cbody(frame), a(frame)
+		local function loop(var, ...)
+			if (var == nil) return
+			body(var, ...)
+			return loop(next(state, var))
+		end
+		return loop(next(state))
 	end
 end)
