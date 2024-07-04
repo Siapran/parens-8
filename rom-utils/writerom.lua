@@ -1,6 +1,6 @@
 function writerom(str, addr, filename)
 	assert(
-		addr>>16 + #str>>16 < 0x0.8000,
+		addr>>16 + #str>>16 < 0x0.4300,
 		"string does not fit in cart ROM")
 	local target = filename and 0x8000 or addr
 	poke(target, ord(str, 1, #str))
