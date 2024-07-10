@@ -32,14 +32,9 @@ end
 
 builtin = {}
 
-function compile_n(lookup, exp, ...)
-	if (exp) return compile(exp, lookup), compile_n(lookup, ...)
-end
-
 function compile(exp, lookup)
+	if (not exp) return
 	if type(exp) == "string" then
-		local fields = split(exp, ".")
-		if (fields[2]) return fieldview(lookup, deli(fields, 1), fields)
 		local idx, where = lookup(exp)
 		return where
 			and function(frame) return frame[1][where][idx] end
@@ -48,33 +43,31 @@ function compile(exp, lookup)
 	if (type(exp) == "number") return function() return exp end
 
 	local op = deli(exp, 1)
-	if (builtin[op]) return builtin[op](lookup, unpack(exp))
+	if (builtin[op]) return builtin[op](exp, lookup)
 
-	local function ret(s1, ...)
-		local s2 = ... and ret(...)
+	local function ret(e1, ...)
+		local s1, s2 = compile(e1, lookup), ... and ret(...)
 		return s2 and function(frame)
 			return s1(frame), s2(frame)
 		end or s1
 	end
-	local fun, args =
-		compile(op, lookup), ret(compile_n(lookup, unpack(exp)))
-	return args and function(frame)
-		return fun(frame)(args(frame))
-	end or function(frame)
-		return fun(frame)()
-	end
+
+	local fun, args = compile(op, lookup), ret(unpack(exp))
+	return args
+		and function(frame) return fun(frame)(args(frame)) end
+		or function(frame) return fun(frame)() end
 end
 
-function builtin:quote(exp2) return function() return exp2 end end
+function builtin:quote() local e = self[1] return function() return e end end
 
-function builtin:fn(exp1, exp2)
+function builtin:fn(lookup)
 	local locals, captures, key, close =
 		parens8[[(quote ()) (quote ()) (quote ())]]
-	for i,v in inext, exp1 do locals[v] = i end
-	local body = compile(exp2, function(name)
+	for i,v in inext, self[1] do locals[v] = i end
+	local body = compile(self[2], function(name)
 		local idx = locals[name]
 		if (idx) return idx + 1, false
-		local idx, where = self(name)
+		local idx, where = lookup(name)
 		if where then captures[where] = true
 		else close = true end
 		return idx, where or key
@@ -97,40 +90,29 @@ function builtin:fn(exp1, exp2)
 end
 
 parens8[[
-(fn (closure) (rawset builtin "when" (fn (lookup e1 e2 e3)
-	(closure (compile_n lookup e1 e2 e3))
+(fn (closures) (rawset builtin "when" (fn (exp lookup)
+	(select (select "#" (unpack exp 2)) (closures
+		(compile (rawget exp 1) lookup)
+		(compile (rawget exp 2) lookup)
+		(compile (rawget exp 3) lookup)))
 )))
 ]](function(a1, a2, a3) return
 	function(frame)
 		if (a1(frame)) return a2(frame)
-		if (a3) return a3(frame)
+	end,
+	function(frame)
+		if (a1(frame)) return a2(frame)
+		return a3(frame)
 	end
 end)
 
 parens8[[
-(fn (closures) (rawset builtin "set" (fn (lookup exp1 exp2)
-	((fn (compiled fields) ((fn (head tail) (when tail
-		(select 3 (closures compiled tail (fieldview lookup head fields)))
-		((fn (idx where) (select (when where 1 2)
-			(closures compiled idx where)
-		)) (lookup head))
-	)) (deli fields 1) (deli fields))) (compile exp2 lookup) (split exp1 "."))
+(fn (closures) (rawset builtin "set" (fn (lookup exp)
+	((fn (compiled idx where)
+		(select (when where 1 2) (closures compiled idx where)))
+	 (compile (rawget exp 2) lookup) (lookup (rawget exp 1)))
 )))
 ]](function(compiled, idx, where) return
 	function(frame) frame[1][where][idx] = compiled(frame) end,
-	function(frame) frame[idx] = compiled(frame) end,
-	function(frame) where(frame)[idx] = compiled(frame) end
+	function(frame) frame[idx] = compiled(frame) end
 end)
-
-parens8[[
-(fn (closure) (set fieldview (fn (lookup tab fields view) (select -1
-	(set view (fn (step i field) (when field
-		(view (closure step field) (inext fields i)) step)))
-	(view (compile tab lookup) (inext fields))
-))))
-]](function(step, field)
-	return function(frame)
-		return step(frame)[field]
-	end
-end)
-
