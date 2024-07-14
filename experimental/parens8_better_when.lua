@@ -92,7 +92,7 @@ end
 
 parens8[[
 (fn (closures) (rawset builtin "when" (fn (lookup e1 e2 e3)
-	(select (count (pack (select 2 e1 e2 e3))) (closures
+	(select (count (pack e2 e3)) (closures
 		(compile e1 lookup) (compile e2 lookup) (compile e3 lookup)))
 )))
 ]](function(a1, a2, a3) return

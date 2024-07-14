@@ -7,22 +7,54 @@ __lua__
 -- #include ../v4/parens8_tailcall.lua
 -- #include parens8_stack_tail.lua
 -- #include parens8_exparray.lua
-#include parens8_better_when.lua
+-- #include parens8_better_when.lua
+#include parens8_lean3.lua
 -- #include ../misc/profiler.lua
 
-parens8[[
-(rawset builtin "loop" (fn (lookup exp2 exp3) (compile
-	(pack (pack "fn" (pack "__ps8_loop") (pack "id"
-		(pack "set" "__ps8_loop" (pack "fn" (pack)
-			(pack "when" exp2 (pack "__ps8_loop" exp3))
-		))
-		(pack "__ps8_loop")
-	)))
-	lookup
-)))
-]]
+-- parens8[[
+-- (rawset builtin (quote loop) (fn (lookup exp2 exp3) (compile
+-- 	(pack (pack (quote fn) (pack (quote __ps8_loop)) (pack (quote id)
+-- 		(pack (quote set) (quote __ps8_loop) (pack (quote fn) (pack)
+-- 			(pack (quote when) exp2 (pack (quote __ps8_loop) exp3))
+-- 		))
+-- 		(pack (quote __ps8_loop))
+-- 	)))
+-- 	lookup
+-- )))
+-- ]]
 
-parens8[[(loop 1 (print (stat 0)))]]
+-- function print_all(val, indent)
+-- 	indent = indent or ""
+-- 	if (type(val) ~= "table") return print(indent .. tostring(val))
+-- 	for elem in all(val) do print_all(elem, indent .. "-") end
+-- end
+
+-- _pstr, _ppos = "id " .. [[
+-- (rawset builtin "loop" (fn (lookup exp2 exp3) (compile
+-- 	(pack (pack "fn" (pack "__ps8_loop") (pack "id"
+-- 		(pack "set" "__ps8_loop" (pack "fn" (pack)
+-- 			(pack "when" exp2 (pack "__ps8_loop" exp3))
+-- 		))
+-- 		(pack "__ps8_loop")
+-- 	)))
+-- 	lookup
+-- )))
+-- ]] .. ")", 0
+-- print_all({parse()})
+
+-- parens8[[
+-- (rawset builtin "loop" (fn (lookup exp2 exp3) (compile
+-- 	(pack (pack "fn" (pack "__ps8_loop") (pack "id"
+-- 		(pack "set" "__ps8_loop" (pack "fn" (pack)
+-- 			(pack "when" exp2 (pack "__ps8_loop" exp3))
+-- 		))
+-- 		(pack "__ps8_loop")
+-- 	)))
+-- 	lookup
+-- )))
+-- ]]
+
+-- parens8[[(loop (true) (print (stat 0)))]]
 
 
 -- function fun_lua(cond, a, b, c)
