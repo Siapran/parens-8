@@ -38,7 +38,7 @@ Parens-8 comes with four base builtins:
 
 Note that `"foo"` is translated into `(quote foo)` by the parser. You can also create Lua arrays and `nil` this way: `(quote (1 2 3))`, `(quote)`
 
-While it's possible to write [an entire game](./examples/baloonbomber_v3.p8) in parens-8, it's best to keep most of your code as plain Lua. Use parens-8 for code that you know is stable, and where performance isn't critical. We'll elaborate on performance and use cases further ahead.
+While it's possible to write [an entire game](./examples/baloonbomber.p8) in parens-8, it's best to keep most of your code as plain Lua. Use parens-8 for code that you know is stable, and where performance isn't critical. We'll elaborate on performance and use cases further ahead.
 
 ## Parens-8 versions
 
